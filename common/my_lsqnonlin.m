@@ -1,7 +1,6 @@
-function [X, J] = my_lsqnonlin(function_handle, X0, num_iters)
+function [X, J] = my_lsqnonlin(function_handle, X, num_iters)
 
 E_history = zeros(num_iters, 1);
-X = X0;
 lambda = 1;
 E_previous = Inf;
 for iter = 1:num_iters + 1
@@ -11,7 +10,8 @@ for iter = 1:num_iters + 1
 
     if E <= E_previous
         
-        lambda = lambda / 2;
+        %lambda = lambda / 2;
+        lambda = lambda / 1.5;
         E_previous = E;
         F_previous = F;
         J_previous = J;
@@ -19,7 +19,8 @@ for iter = 1:num_iters + 1
        
         E_history(iter) = E;
     else
-        lambda = lambda * 10;
+        %lambda = lambda * 10;
+        lambda = lambda * 5;
         E = E_previous;
         F = F_previous;
         J = J_previous;
