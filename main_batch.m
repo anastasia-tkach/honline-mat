@@ -1,9 +1,9 @@
 %close all;
 clear; clc;
-rng(2572);
+rng default;
 
 %% Parameters
-num_samples = 15;
+num_samples = 7;
 B = 3;
 T = 3;
 D = 3 * num_samples;
@@ -20,28 +20,13 @@ P = diag([beta_noise_std * ones(B, 1); zeros(T, 1)]);
 
 %% Scrip
 %%{
-thetas_true = [
-    0, 0, 0; 0, 0, 0; 0, 0, 0;
-    0, pi/4, pi/4; 0, pi/4, pi/4; 0, pi/4, pi/4;
-    0, 0, 0; 0, 0, 0; 0, 0, 0;
-    0, pi/4, pi/4; 0, pi/4, pi/4; 0, pi/4, pi/4;
-    0, 0, 0; 0, 0, 0; 0, 0, 0;];
-    thetas_true = [linspace(0, 0, 17); 0, 0, 0, linspace(0, pi/4, 5), pi/4, linspace(pi/4, 0, 5), 0, 0, 0; ...
-        0, 0, 0, linspace(0, pi/4, 5), pi/4, linspace(pi/4, 0, 5), 0, 0, 0]'; 
-%thetas_true = [thetas_true; zeros(50, B)];
+theta_certain = [0, pi/3, pi/3];
+theta_uncertain = [0, 0, 0];
+thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain, 4, 1); repmat(theta_uncertain, 8, 1)]; 
 N = length(thetas_true);
 [frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, ...
     beta_noise_std, theta_noise_std, measurement_noise_std, num_samples);
-%%}
-%{
-%dataset_entry_number = 50;
-dataset_path = 'C:\Users\t-antka\OneDrive - Microsoft\Data\CalibrationDataset\';
-name_suffix = sprintf('%03d', dataset_entry_number);
-load([dataset_path, 'frames_', name_suffix]);
-load([dataset_path, 'thetas_true_', name_suffix]);
-load([dataset_path, 'beta_init_', name_suffix]);
-theta_init = [0; 0; 0];
-%}
+
 num_frames = length(thetas_true);
 num_iters = 20;
 to_display = false;
@@ -60,6 +45,10 @@ P_ = P + Q; C_ = inv(P_);
 history = {};
 J_previous = [];
 F_previous = [];
+
+if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 0.8]);
+    axis off; axis equal; hold on;
+end
 
 %% Tracking
 for N = 1:num_frames
@@ -82,7 +71,7 @@ for N = 1:num_frames
     end
     beta0 = betas{N}; theta0 = thetas{N};
     
-    if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.8, 0.5]); axis off; axis equal; hold on; end
+    %if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.8, 0.5]); axis off; axis equal; hold on; end
     for iter = 1:num_iters
         j1 = cell(N, 1);
         f1 = cell(N, 1);
@@ -99,12 +88,13 @@ for N = 1:num_frames
             [segment_indices, model_points] = compute_correspondences_2D(segments, blocks, data_points);
             
             %% Display
-            if (to_display && iter == num_iters)
-                rows = 5;  colums = 3;
-                column = rem(i - 1, rows);
-                row = colums - floor((i - 1)/rows) - 1;
-                h = subplot('Position', [column * (1/rows), row * (1/colums), 1/rows - 0.005, 1/colums - 0.005]); hold on;
-                set(gca,'XTick',[], 'YTick', [], 'XColor', [1, 1, 1], 'YColor', [1, 1, 1]);
+            if (to_display && iter == num_iters && i == N)
+                %rows = 5;  colums = 3;
+                %column = rem(i - 1, rows);
+                %row = colums - floor((i - 1)/rows) - 1;
+                %h = subplot('Position', [column * (1/rows), row * (1/colums), 1/rows - 0.005, 1/colums - 0.005]); hold on;
+                %set(gca,'XTick',[], 'YTick', [], 'XColor', [1, 1, 1], 'YColor', [1, 1, 1]);
+                figure(1); clf; hold on; axis off; axis equal; set(gcf,'color','w');
                 display_kalman_2D(segments, data_points, model_points, iter);
             end
             
@@ -146,7 +136,7 @@ for N = 1:num_frames
         I(indices == 0) = 0.1;
         I(indices == 1) = 50;
         I = diag(I);
-        w2 = 0;
+        w2 = 10;
         LHS = J1' * J1 + w2 * (J2' * J2);
         RHS = J1' * F1 + w2 * (J2' * F2);
         delta = (LHS + lambda * I) \ RHS;
