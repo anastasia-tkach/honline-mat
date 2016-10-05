@@ -1,4 +1,4 @@
-function [F, J] = sticks_finger_fg_batch(X, frames, N, D, batch_size, w2)
+function [F, J] = sticks_finger_fg_batch(X, segments0, joints, frames, N, D, batch_size, w2)
 
 blocks = {[1, 2], [2, 3], [3, 4]};
 B = 3; T = 3;
@@ -18,9 +18,8 @@ for i = max(1, N - batch_size + 1):N
     data_points = frames{i};
     
     %% Initialize
-    [segments0, joints] = segments_and_joints_2D();
-    [segments0] = shape_2D(segments0, betas{i});
-    [segments] = pose_2D(segments0, joints, thetas{i});
+    [segments] = shape_2D(segments0, betas{i});
+    [segments] = pose_2D(segments, joints, thetas{i});
     
     %% Compute correspondences
     [segment_indices, model_points] = compute_correspondences_cpp_wrapper(segments, blocks, data_points);

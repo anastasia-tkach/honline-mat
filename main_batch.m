@@ -13,6 +13,8 @@ blocks = {[1, 2], [2, 3], [3, 4]};
 beta_true = [3; 3; 3];
 theta_init = [0; 0; 0];
 
+[segments0, joints] = segments_and_joints_2D();
+
 R = 0.2 * eye(D + B + T, D + B + T);
 Q = diag([0 * [1; 1; 0]; theta_noise_std * ones(T, 1)]); %0.0001
 P = diag([beta_noise_std * ones(B, 1); zeros(T, 1)]);
@@ -77,7 +79,7 @@ for N = 1:num_frames
         X((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas{i};
     end
     
-    [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, frames, N, D, batch_size, w2), X, num_iters);    
+    [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, batch_size, w2), X, num_iters);    
     
     betas = cell(N, 1);
     thetas = cell(N, 1);
@@ -105,6 +107,7 @@ for N = 1:num_frames
     history{N}.mean = betas{N};
 end
 
+return
 %figure; hold on; plot(energy(2:end), 'lineWidth', 2);
 %figure; hold on; plot(beta(:, 1), 'lineWidth', 2); plot(beta(:, 2), 'lineWidth', 2); plot(beta(:, 3), 'lineWidth', 2);
 

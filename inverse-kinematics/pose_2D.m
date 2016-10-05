@@ -8,7 +8,8 @@ for i = 1:length(joints)
     T = [];
     switch joints{i}.type
         case 'R'
-            T = segment.local * makehgtform('axisrotate', joints{i}.axis, theta(i));
+            %T = segment.local * makehgtform('axisrotate', joints{i}.axis, theta(i));
+            T = segment.local * my_axisrotate_in_plane(theta(i));            
         case 'T'
             T = segment.local * makehgtform('translate', joints{i}.axis * theta(i));
     end    
