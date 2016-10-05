@@ -18,10 +18,11 @@ for k = 1:num_model_points
         joint_id = segment.kinematic_chain(l);
         segment_id = joints{joint_id}.segment_id;
         u = joints{joint_id}.axis;
+   
         p = segments{segment_id}.global(1:3, 4);
         T = segments{segment_id}.global;
         v = T * [u; 1]; v = v(1:3) / v(4);
-        v = v - p;
+        v = v - p;        
         
         switch joints{joint_id}.type
             case 'R'

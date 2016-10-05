@@ -1,4 +1,3 @@
-%close all;
 clear; clc;
 rng default;
 
@@ -41,10 +40,6 @@ R = r * eye(D + B + T, D + B + T);
 Q = diag([zeros(B, 1); theta_noise_std * ones(T, 1)]);
 P = diag([beta_noise_std * ones(B, 1); zeros(T, 1)]);
 P_ = P + Q; C_ = inv(P_);
-
-history = {};
-J_previous = [];
-F_previous = [];
 
 if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 0.8]);
     axis off; axis equal; hold on;

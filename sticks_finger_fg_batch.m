@@ -23,13 +23,13 @@ for i = max(1, N - batch_size + 1):N
     [segments] = pose_2D(segments0, joints, thetas{i});
     
     %% Compute correspondences
-    [segment_indices, model_points] = compute_correspondences_2D(segments, blocks, data_points);
+    [segment_indices, model_points] = compute_correspondences_cpp_wrapper(segments, blocks, data_points);
     
-    %% Compute Jacobians
-    [~, j_theta] = jacobian_ik_2D(segments, joints, model_points, data_points, segment_indices);
-    [f1_i, j_beta] = jacobian_shape_2D(segments, model_points, data_points, segment_indices);
-    
-    j1{i} = - [j_beta, j_theta];
+    %% Compute Jacobians    
+    %[f1_i, j_beta] = jacobian_shape_2D(segments, model_points, data_points, segment_indices);    
+    %j1{i} = - [j_beta, j_theta];
+    [f1_i, j1_i] = jacobian_shape_pose_cpp_wrapper(segments, joints, model_points, data_points, segment_indices);
+    j1{i} = - j1_i;
     f1{i} = f1_i;
 end
 
