@@ -1,0 +1,21 @@
+function [F, J] = sticks_finger_fg_single(x, segments0, joints, data_points)
+
+blocks = {[1, 2], [2, 3], [3, 4]};
+B = 3; T = 3;
+
+%% Update
+betas = x(1:B);
+thetas = x(B + 1:B + T);
+
+
+%% Initialize
+[segments] = shape_2D(segments0, betas);
+[segments] = pose_2D(segments, joints, thetas);
+
+%% Compute correspondences
+[segment_indices, model_points] = compute_correspondences_cpp_wrapper(segments, blocks, data_points);
+
+%% Compute Jacobians
+[F, J] = jacobian_shape_pose_cpp_wrapper(segments, joints, model_points, data_points, segment_indices);
+J = -J;
+

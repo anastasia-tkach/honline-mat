@@ -4,7 +4,7 @@
 
 ylimit = [-1.8, -0.2]; X = []; num_iters = 50;
 t_start = 0.01; t_end = 4.0;
-measurement_noise_std = 0.08;
+settings.measurement_noise_std = 0.08;
 x_true = -1;
 
 x_init = 0.4 * randn;
@@ -26,9 +26,9 @@ T = [uncertain * ones(3, 1); certain * ones(4, 1); uncertain * ones(8, 1);];
 num_data = length(T);
 Y = zeros(num_data, 1);
 for i = 1:num_data
-    Y(i) = f_(x_true, T(i)) + measurement_noise_std * randn();
+    Y(i) = f_(x_true, T(i)) + settings.measurement_noise_std * randn();
     while Y(i) < 0,
-        Y(i) = f_(x_true, T(i)) + measurement_noise_std * randn();
+        Y(i) = f_(x_true, T(i)) + settings.measurement_noise_std * randn();
     end
 end
 
@@ -41,30 +41,30 @@ point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 %% Optimize
 display = false;
 
-quadratic_two = true;
-last_n = false;
-kalman_like = false;
-kalman = false;
-quadratic_all = false;
-batch = false;
+settings.quadratic_two = false;
+settings.last_n = false;
+settings.kalman_like = false;
+settings.kalman = false;
+settings.quadratic_all = false;
+settings.batch = true;
 
 w2 = 1; w3 = 1;
 
-batch_size = 2;
+settings.batch_size = 2;
 is_independent = false;
 recompute_egh = true;
 
 X = [];
 for N = 1:num_data
     %% Quadratic two
-    if (quadratic_two)
-        if N <= batch_size
+    if (settings.quadratic_two)
+        if N <= settings.batch_size
             X0 = x_init * ones(N, 1);
         else
-            X0 = [X(1:N - batch_size); x_init * ones(batch_size, 1)];
+            X0 = [X(1:N - settings.batch_size); x_init * ones(settings.batch_size, 1)];
         end
         if N < 3
-            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, batch_size, w2, is_independent), X0, num_iters);            
+            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent), X0, num_iters);            
         else
             X0 = [X; x_init];
             [xx_opt, J] = simple_problem_quadratic_two(X0, Y, T, N, w2);
@@ -74,14 +74,14 @@ for N = 1:num_data
     end
     
     %% Last n
-    if (last_n)
+    if (settings.last_n)
         y = Y(N); t = T(N);
         if N == 1
             JtJ = 0;
             history = {};
         end
         X0 = [X; x_init];
-        [X, ~] = my_lsqnonlin(@(X) simple_problem_fg_last_n(X, X0, history, y, t, N, w2, w3, batch_size), X0, num_iters);
+        [X, ~] = my_lsqnonlin(@(X) simple_problem_fg_last_n(X, X0, history, y, t, N, w2, w3, settings.batch_size), X0, num_iters);
         J1 = 2 * t * exp(X(N) * t)^2;
         
         %J2 = 1; if N == 1, J2 = 0; end
@@ -90,7 +90,7 @@ for N = 1:num_data
     end
     
     %% Kalman-like
-    if (kalman_like)
+    if (settings.kalman_like)
         x = x_init; y = Y(N); t = T(N);
         if (N == 1)
             x_prev = 0;
@@ -107,8 +107,8 @@ for N = 1:num_data
     end
     
     %% Quadratic all
-    if (quadratic_all && N > 1)
-        batch_size = num_data;
+    if (settings.quadratic_all && N > 1)
+        settings.batch_size = num_data;
         options = optimoptions(@fminunc,'Algorithm','quasi-newton');
         x = x_init;
         X_init = X;
@@ -131,8 +131,8 @@ for N = 1:num_data
         X = [X_opt; x_opt];
         
         if (recompute_egh)
-            [E1, dE1, ddE1] = simple_problem_egh_1_batch(X, Y, T, N, batch_size, w2);
-            [E2, dE2, ddE2] = simple_problem_egh_2_batch(X, Y, T, N, batch_size, w2);
+            [E1, dE1, ddE1] = simple_problem_egh_1_batch(X, Y, T, N, settings.batch_size, w2);
+            [E2, dE2, ddE2] = simple_problem_egh_2_batch(X, Y, T, N, settings.batch_size, w2);
         else
             [E1, dE1, ddE1] = simple_problem_egh_1_cumulative(E1, dE1, ddE1, X, Y, T, N, w2);
             [E2, dE2, ddE2] = simple_problem_egh_2_cumulative(E2, dE2, ddE2, X, Y, T, N, w2);
@@ -142,21 +142,21 @@ for N = 1:num_data
         %simple_problem_debug_recompute(x, X_init, x_opt, X_opt, Y, T, history{N - 1}.E, history{N - 1}.dE, history{N - 1}.ddE, N, w2);
     end
     
-    %% Batch
-    if (batch || N == 1)
-        if N <= batch_size
+    %% settings.batch
+    if (settings.batch || N == 1)
+        if N <= settings.batch_size
             X0 = x_init * ones(N, 1);
         else
-            X0 = [X(1:N - batch_size); x_init * ones(batch_size, 1)];
+            X0 = [X(1:N - settings.batch_size); x_init * ones(settings.batch_size, 1)];
         end
         %options = optimoptions(@lsqnonlin, 'Algorithm', 'levenberg-marquardt', 'Jacobian','on', 'OptimalityTolerance', 1e-10);
         %X = lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, w2), X0, [], [], options);
         
-        [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, batch_size, w2, is_independent), X0, num_iters);
+        [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent), X0, num_iters);
     end
     
     %% Kalman
-    if (kalman)
+    if (settings.kalman)
         if (N == 1), x = x_init;
         else x = history{N - 1}.X(N - 1); end
         if N == 1, C_ = 0.001; end
@@ -181,7 +181,7 @@ for N = 1:num_data
     
     %% Record history
     history{N}.X = X;
-    if (quadratic_two)
+    if (settings.quadratic_two)
         if N < 3
             history{N}.JtJ = JtJ;
         else
@@ -190,18 +190,18 @@ for N = 1:num_data
             history{N}.JtJ(N-1:N, N-1:N) = JtJ;
         end
     end
-    if (kalman_like || last_n)
+    if (settings.kalman_like || settings.last_n)
         history{N}.JtJ = zeros(N, N);
         if (N > 1), history{N}.JtJ(1:N-1, 1:N-1) = history{N - 1}.JtJ; end
         history{N}.JtJ(N, N) = JtJ;
         history{N}.JtJ = JtJ';
     end
-    if (batch || quadratic_all)
-        [F, J] = simple_problem_fg_batch(X, Y, T, N, batch_size, w2, is_independent);
+    if (settings.batch || settings.quadratic_all)
+        [F, J] = simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent);
         %J1 = J(1:N, :); history{N}.JtJ = J1' * J1;
         J1 = J(1:N, :); history{N}.JtJ = J' * J;
     end
-    if quadratic_all
+    if settings.quadratic_all
         if N == 1
             history{N}.E1 = F' * F; history{N}.E2 = 0;
             history{N}.dE1 = 2 * F' * J; history{N}.dE2 = 0;
@@ -212,7 +212,7 @@ for N = 1:num_data
             history{N}.ddE1 = ddE1; history{N}.ddE2 = ddE2;
         end
     end
-    if (kalman)
+    if (settings.kalman)
         if (N > 1), history{N}.JtJ(1:N-1, 1:N-1) = history{N - 1}.JtJ; end
         history{N}.JtJ(N, N) = 0.2 * 0.2 * C_;
     end
