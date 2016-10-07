@@ -22,7 +22,8 @@ h2 = 0;
 %% Energies
 E1_ = f1' * f1; E2_ = f2' * f2;
 dE1_ = 2 * f1' * j1; dE2_ = 2 * f2' * j2;
-ddE1_ = 2 * j1' * j1 + 2 * f1 * h1; ddE2_ = 2 * j2' * j2 + 2 * f2 * h2;
+ddE1_ = 2 * j1' * j1 + 2 * f1 * h1; 
+ddE2_ = 2 * j2' * j2 + 2 * f2 * h2;
 E_ = E1_ + E2_; dE_ = dE1_ + dE2_; ddE_ = ddE1_ + ddE2_;
 
 %% Quadratic approximation

@@ -59,6 +59,9 @@ if settings.quadratic_all == true, algorithm_name = 'quadratic-all'; end
 if settings.batch == true, algorithm_name = 'batch'; end
 if settings.independent == true, algorithm_name = 'independent'; end
 title_string = ['\color[rgb]{0.9 0.4 0.3}', algorithm_name, '\color[rgb]{0.25 0.25 0.25}'];
+
+if settings.no_lm, title_string = [title_string, '     no LM']; end
+
 if settings.batch || settings.last_n, title_string = [title_string, '     batch = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.batch_size), '\color[rgb]{0.25 0.25 0.25}']; end
 title_string = [title_string, '     \omega_2 = ', '\color[rgb]{0 0.6 0.3}', num2str(w2), '\color[rgb]{0.25 0.25 0.25}'];
 if settings.last_n, title_string = [title_string, '     \omega_3 = ', '\color[rgb]{0 0.6 0.3}', num2str(w3), '\color[rgb]{0.25 0.25 0.25}']; end

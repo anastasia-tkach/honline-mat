@@ -1,4 +1,4 @@
-function [F, J] = jacobian_shape_pose_matlab(sizes, DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
+function [F, J] = jacobian_shape_pose_matlab(beta, theta, sizes, DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
 
 num_points = sizes(1);
 num_joints = sizes(2);
@@ -34,7 +34,13 @@ for k = 1:num_points
         %% shape
         v = T * [0; 1; 0; 1]; v = v(1:3) / v(4);
         v = v - p;        
-        j(:, segment_id) = v;
+        
+        c = 1;
+        if l == 3 || segment_kinematic_chain(l + 1) == -1
+            c = norm(m - p) / beta(l); 
+        end
+        
+        j(:, segment_id) = c * v;
         
         %% pose
         v = T * [u; 1]; v = v(1:3) / v(4);
@@ -46,3 +52,5 @@ for k = 1:num_points
     J(k, :) = n' * j;
     F(k) = n' * (d - m);
 end
+
+

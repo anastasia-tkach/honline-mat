@@ -2,13 +2,13 @@
 %rng default;
 
 %% Parameters
-num_samples = 7;
+num_samples = 10;
 B = 3;
 T = 3;
 D = 3 * num_samples;
-settings.measurement_noise_std = 0.001; %0.07
-settings.beta_noise_std = 0.3;
-settings.theta_noise_std = 0;
+settings.measurement_noise_std = 0.07; 
+settings.beta_noise_std = 0.5;
+settings.theta_noise_std = 0.15;
 blocks = {[1, 2], [2, 3], [3, 4]};
 beta_true = [3; 3; 3];
 theta_init = [0; 0; 0];
@@ -18,14 +18,14 @@ theta_init = [0; 0; 0];
 %% Scrip
 theta_certain = [0, pi/3, pi/3];
 theta_uncertain = [0, 0, 0];
-thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain, 4, 1); repmat(theta_uncertain, 8, 1)];
+thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain, 4, 1); repmat(theta_uncertain, 7, 1)];
 N = length(thetas_true);
 [frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, ...
     settings.beta_noise_std, settings.theta_noise_std, settings.measurement_noise_std, num_samples);
 
 num_frames = length(thetas_true);
 num_iters = 20;
-to_display = true;
+to_display = false;
 
 init_from_previous_frame = false;
 
@@ -40,32 +40,15 @@ settings.kalman = false;
 settings.quadratic_all = false;
 settings.batch = true;
 settings.independent = false;
-settings.no_lm = true;
+settings.no_lm = false;
 
-settings.batch_size = num_frames;
+settings.batch_size = 1;
 
 w2 = 0;
 
 %% Tracking
 for N = 1:num_frames
     %disp(N);
-    
-    %% Initialization
-    for i = max(1, N - settings.batch_size + 1):N
-        if init_from_previous_frame
-            if i == 1
-                betas{1} = beta_init;
-                thetas{1} = theta_init;
-            else
-                betas{i} = history{N - 1}.betas{i - 1};
-                thetas{i} = history{N - 1}.thetas{i - 1};
-            end
-        else
-            thetas{i} = thetas_init{i};
-            betas{i} = beta_init;
-        end
-    end
-    beta0 = betas{N}; theta0 = thetas{N};
     
     %if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.8, 0.5]); axis off; axis equal; hold on; end
     
@@ -74,7 +57,7 @@ for N = 1:num_frames
         X = zeros(N * (B + T), 1);
         J = zeros(N * (B + T), N * (B + T));
         for i = 1:N
-            x = [betas{i}; thetas{i}];
+            x = [beta_init; thetas_init{i}];
             [x, j] = my_lsqnonlin(@(x) sticks_finger_fg_single(x, segments0, joints, frames{i}), x, num_iters);
             betas{i} = x(1:B);
             thetas{i} = x(B + 1:B + T);
@@ -86,9 +69,13 @@ for N = 1:num_frames
     %% Batch optimization
     if (settings.batch)
         X = zeros(N * (B + T), 1);
-        for i = 1:N
+        for i = 1:max(1, N - settings.batch_size + 1) - 1
             X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = betas{i};
             X((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas{i};
+        end
+        for i = max(1, N - settings.batch_size + 1):N
+            X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = beta_init;
+            X((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
         end
         
         if (settings.no_lm)
@@ -105,9 +92,9 @@ for N = 1:num_frames
             [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings.batch_size, w2), X, num_iters);
         end
         
-        betas = cell(N, 1);
-        thetas = cell(N, 1);
-        for i = 1:N
+        %betas = cell(N, 1);
+        %thetas = cell(N, 1);
+        for i = max(1, N - settings.batch_size + 1):N
             betas{i} = X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B);
             thetas{i} = X((B + T) * (i - 1) + B + 1:(B + T) * i);
         end

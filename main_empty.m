@@ -15,9 +15,9 @@ blocks = {[1, 2], [2, 3], [3, 4]};
 %% Get data
 beta_true = [3; 3; 3];
 beta_init = beta_true + beta_noise_std * randn;
-theta_init = [0; 0; 0];
+theta_init = [pi/3; pi/3; pi/3];
 theta_true = theta_init;
-N = 50;
+N = 5;
 num_iters = 7;
 
 %% Initialization
@@ -56,11 +56,14 @@ for n = 1:N
         
         %% Compute Jacobians
         %%{
-        [F, J_theta] = jacobian_ik_2D(segments, joints, model_points, data_points, segment_indices);
-        %[F_, J_] = jacobian_pose_cpp_wrapper(segments, joints, model_points, data_points, segment_indices);       
-        [F, J_beta] = jacobian_shape_2D(segments, model_points, data_points, segment_indices);
+        %[F, J_theta] = jacobian_ik_2D(beta, theta, segments, joints, model_points, data_points, segment_indices);
+        %[F, J_beta] = jacobian_shape_2D(beta, theta, segments, model_points, data_points, segment_indices);
+        %J = [J_beta, J_theta];
+        %F_ = F;
+        %J_ = J;
         
-        J = [J_beta, J_theta];
+        [F, J] = jacobian_shape_pose_cpp_wrapper(beta, theta, segments, joints, model_points, data_points, segment_indices);       
+                
 
         I = 0.1 * eye(T + B, T + B); I(end - T + 1:end, end -T + 1:end) = 50 * eye(T, T);
         
