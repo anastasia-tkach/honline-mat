@@ -15,10 +15,10 @@ end
 
 close all;
 clear; clc;
-rng(2572);
+rng(3453);
 
 %% Parameters
-num_samples = 5;
+num_samples = 3;
 B = 3;
 T = 3;
 D = 3 * num_samples;
@@ -59,8 +59,20 @@ for n = 1:N
         data_points{i} = data_points{i} + measurement_noise_std * randn(2, 1);
     end
    
-    data_points = data_points(end);
-    sticks_finger_eg_single([beta; theta], segments0, joints, data_points);
+    %[F, G, H] = sticks_finger_eg_single([beta; theta], segments0, joints, data_points, 'numerical');
+    [F_, G_, H_] = sticks_finger_eg_single([beta; theta], segments0, joints, data_points, 'analytical');
+    %[F_cpp, G_cpp, H_cpp] = sticks_finger_eg_single([beta; theta], segments0, joints, data_points, 'cpp');
+    
+    disp(G_);
+    
+    %disp([F; F_; F_cpp]);
+    
+    %for i = 1:size(F, 1)
+    %    disp([G(i, :); G_(i, :); G_cpp(i, :)]);
+    %end
+    %for i = 1:6
+    %   disp([H(i, :); H_(i, :)]);
+    %end
     
     %% lsqnonlin
     %{

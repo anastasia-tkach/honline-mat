@@ -4,7 +4,8 @@
 #include <Eigen/Dense>
 
 
-void jacobian_pose(mwSize num_points, mwSize num_segments, mwSize num_joints, mwSize max_kinematic_chain, const mlx_array<mlx_double> & DataPoints,
+void jacobian_pose(const mlx_array<mlx_double> & beta, const mlx_array<mlx_double> & theta,
+        mwSize num_points, mwSize num_segments, mwSize num_joints, mwSize max_kinematic_chain, const mlx_array<mlx_double> & DataPoints,
         const mlx_array<mlx_double> & ModelPoints, const mlx_array<mlx_double> & segment_indices, const mlx_array<mlx_double> & SegmentsKinematicChain, 
         const mlx_array<mlx_double> & SegmentsGlobal, const mlx_array<mlx_double> & JointsSegmentId, const mlx_array<mlx_double> & JointsAxis,
         mlx_array<mlx_double> & F, mlx_array<mlx_double> & J) {
@@ -38,8 +39,14 @@ void jacobian_pose(mwSize num_points, mwSize num_segments, mwSize num_joints, mw
             // shape
             Eigen::Vector4d w4  = T * Eigen::Vector4d(0, 1, 0, 1);
             Eigen::Vector3d w = Eigen::Vector3d(w4(0) / w4(3), w4(1) / w4(3), w4(2) / w4(3));
-            w = w - p;        
-            j.col(segment_id) = w;
+            w = w - p;   
+            
+            double c = 1;
+            bool last_in_kinematic_chain = SegmentsKinematicChain(segment_indices(k, 0) - 1, l + 1) == -1;
+            if (l == 2 || last_in_kinematic_chain)
+                c = (m - p).norm() / beta(l, 0); 
+                        
+            j.col(segment_id) = c * w;
             
             // pose
             Eigen::Vector4d v4 = T * u; 
@@ -49,7 +56,7 @@ void jacobian_pose(mwSize num_points, mwSize num_segments, mwSize num_joints, mw
         } 
 
         for (int var = 0; var < num_segments - 1 + num_joints - 1; var++) 
-            J(k, var) = n.dot(j.col(var));
+            J(k, var) = - n.dot(j.col(var));
         F(k, 0) = n.dot(d - m);
     }
     
@@ -58,19 +65,22 @@ void jacobian_pose(mwSize num_points, mwSize num_segments, mwSize num_joints, mw
 void mlx_function(mlx_inputs& in, mlx_outputs& out) {
     //(sizes, DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
     
-    mlx_array<mlx_double> sizes_array(mlx_size{1, 4}, in[0]);
+    mlx_array<mlx_double> beta(mlx_size{3, 1}, in[0]);
+    mlx_array<mlx_double> theta(mlx_size{3, 1}, in[1]);
+    
+    mlx_array<mlx_double> sizes_array(mlx_size{1, 4}, in[2]);
     mwSize num_points = (mwSize) sizes_array[0];
     mwSize num_joints = (mwSize) sizes_array[1];
     mwSize num_segments = (mwSize) sizes_array[2];
     mwSize max_kinematic_chain = (mwSize) sizes_array[3];
     
-    mlx_array<mlx_double> DataPoints(mlx_size{num_points, 2}, in[1]);
-    mlx_array<mlx_double> ModelPoints(mlx_size{num_points, 2}, in[2]);
-    mlx_array<mlx_double> segment_indices(mlx_size{num_points, 1}, in[3]);
-    mlx_array<mlx_double> SegmentsKinematicChain(mlx_size{num_segments, max_kinematic_chain}, in[4]);
-    mlx_array<mlx_double> SegmentsGlobal(mlx_size{num_segments, 16}, in[5]);
-    mlx_array<mlx_double> JointsSegmentId(mlx_size{num_joints, 1}, in[6]);
-    mlx_array<mlx_double> JointsAxis(mlx_size{num_joints, 3}, in[7]);
+    mlx_array<mlx_double> DataPoints(mlx_size{num_points, 2}, in[3]);
+    mlx_array<mlx_double> ModelPoints(mlx_size{num_points, 2}, in[4]);
+    mlx_array<mlx_double> segment_indices(mlx_size{num_points, 1}, in[5]);
+    mlx_array<mlx_double> SegmentsKinematicChain(mlx_size{num_segments, max_kinematic_chain}, in[6]);
+    mlx_array<mlx_double> SegmentsGlobal(mlx_size{num_segments, 16}, in[7]);
+    mlx_array<mlx_double> JointsSegmentId(mlx_size{num_joints, 1}, in[8]);
+    mlx_array<mlx_double> JointsAxis(mlx_size{num_joints, 3}, in[9]);
     
     mlx_make_array<double> F(mlx_size{num_points, 1});
     mlx_make_array<double> J(mlx_size{num_points, num_segments - 1 + num_joints - 1});
@@ -90,7 +100,7 @@ void mlx_function(mlx_inputs& in, mlx_outputs& out) {
      * out[5] = JointsSegmentId_;
      * out[6] = JointsAxis_;*/
     
-    jacobian_pose(num_points, num_segments, num_joints, max_kinematic_chain, DataPoints, ModelPoints, segment_indices,
+    jacobian_pose(beta, theta, num_points, num_segments, num_joints, max_kinematic_chain, DataPoints, ModelPoints, segment_indices,
             SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis, F, J);
     
     out[0] = F;

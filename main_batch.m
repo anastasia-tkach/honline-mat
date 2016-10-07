@@ -1,5 +1,5 @@
 %clear; clc;
-%rng default;
+rng default;
 
 %% Parameters
 num_samples = 10;
@@ -19,11 +19,11 @@ theta_init = [0; 0; 0];
 theta_certain = [0, pi/3, pi/3];
 theta_uncertain = [0, 0, 0];
 thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain, 4, 1); repmat(theta_uncertain, 7, 1)];
-N = length(thetas_true);
+N = size(thetas_true, 1);
 [frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, ...
     settings.beta_noise_std, settings.theta_noise_std, settings.measurement_noise_std, num_samples);
 
-num_frames = length(thetas_true);
+num_frames = size(thetas_true, 1);
 num_iters = 20;
 to_display = false;
 
@@ -42,7 +42,7 @@ settings.batch = true;
 settings.independent = false;
 settings.no_lm = false;
 
-settings.batch_size = 1;
+settings.batch_size = num_frames;
 
 w2 = 0;
 

@@ -42,9 +42,8 @@ for k = 1:num_points
         
         c = 1;
         if l == 3 || segment_kinematic_chain(l + 1) == -1
-            c = norm(m - p) / beta(l); 
+           c = norm(m - p) / beta(l); 
         end
-        
         j(:, segment_id) = c * v;
         
         %% pose
@@ -53,7 +52,6 @@ for k = 1:num_points
         j(:, num_segments - 1 + joint_id) = cross(v, m - p)';
     end
     
-   
     %% compute hessian - function
     bt = [beta; theta];
     if segment_kinematic_chain(2) == -1    
@@ -172,7 +170,6 @@ end
 %}
 
 %% Compute scalar functions
-
 f = @(bt) F_(bt)' * F_(bt);    
 j = @(bt) 2 * F_(bt)' * J_(bt);    
 v = my_gradient(f, bt);

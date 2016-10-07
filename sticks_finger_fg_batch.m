@@ -24,9 +24,11 @@ for i = max(1, N - batch_size + 1):N
     %% Compute correspondences
     [segment_indices, model_points] = compute_correspondences_cpp_wrapper(segments, blocks, data_points);
     
-    %% Compute Jacobians    
-    [f1_i, j1_i] = jacobian_shape_pose_cpp_wrapper(segments, joints, model_points, data_points, segment_indices);
-    j1{i} = - j1_i;
+    %% Compute Jacobians  
+    beta = X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B);
+    theta = X((B + T) * (i - 1) + B + 1:(B + T) * i);
+    [f1_i, j1_i] = jacobian_shape_pose_cpp_wrapper(beta, theta, segments, joints, model_points, data_points, segment_indices, 'cpp');
+    j1{i} =  j1_i;
     f1{i} = f1_i;
 end
 
