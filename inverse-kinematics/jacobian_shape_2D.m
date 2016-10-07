@@ -13,8 +13,7 @@ for k = 1:num_model_points
     n = (d - m) / norm(m - d);
     
     j = zeros(3, length(segments) - 1);
-    
-    segment = segments{segment_indices(k)};
+    dment = segments{segment_indices(k)};
     for l = 1:length(segment.shape_chain)
         segment_id = segment.shape_chain(l);
         p = segments{segment_id}.global(1:3, 4);
@@ -46,17 +45,7 @@ for k = 1:num_model_points
     
     %disp([m_(bt)'; m(1:2)']);
     
-    dm_db1 = @(bt) [k1 * cos(pi/2 + bt(4)); k1 * sin(pi/2 + bt(4))];
-    dm_db2 = @(bt) [k2 * cos(pi/2 + bt(4) + bt(5)); k2 * sin(pi/2 + bt(4) + bt(5))];
-    dm_db3 = @(bt) [k3 * cos(pi/2 + bt(4) + bt(5) + bt(6)); k3 * sin(pi/2 + bt(4) + bt(5) + bt(6))];
     
-    %v = my_gradient(m_, bt);
-    %disp([j(1:2, :), v(:, 1:3)]);
-    %disp([j(1:2, :), dm_db1(bt), dm_db2(bt) dm_db3(bt)]);
-    
-    dm_db1_db1 = @(bt) [0; 0]; dm_db1_db2 = @(bt) [0; 0]; dm_db1_db3 = @(bt) [0; 0];
-    dm_db2_db1 = @(bt) [0; 0]; dm_db2_db2 = @(bt) [0; 0]; dm_db2_db3 = @(bt) [0; 0];
-    dm_db3_db1 = @(bt) [0; 0]; dm_db3_db2 = @(bt) [0; 0]; dm_db3_db3 = @(bt) [0; 0];
     
     
     %% accumulate sides

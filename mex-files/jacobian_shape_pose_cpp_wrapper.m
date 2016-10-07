@@ -1,4 +1,4 @@
-function [F, J] = jacobian_shape_pose_cpp_wrapper(beta, theta, segments, joints, model_points, data_points, segment_indices)
+function [F, J, H] = jacobian_shape_pose_cpp_wrapper(beta, theta, segments, joints, model_points, data_points, segment_indices)
 
 num_points = length(data_points);
 num_segments = length(segments);
@@ -32,7 +32,7 @@ end
 
 %[F, J] = jacobian_shape_pose_cpp(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);
 
-[F, J] = jacobian_shape_pose_matlab(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);
+[F, J, H] = jacobian_shape_pose_matlab(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);
 
 
 

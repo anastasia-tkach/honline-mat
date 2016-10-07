@@ -11,14 +11,14 @@ if isscalar(f(x))
     for i = 1:length(x)
         delta_x = zeros(size(x));
         delta_x(i) = e;
-        df(i) = (f(x + delta_x) - f(x - delta_x))/ (2 * e);
+        f_plus = f(x + delta_x);
+        f_minus = f(x - delta_x);
+        df(i) = (f_plus - f_minus)/ (2 * e);
     end
-    return;
-end
     
 %% If f is a vector function
     
-if isvector(f(x))
+else
     
     df = zeros(length(f(x)), length(x));
     
@@ -26,20 +26,6 @@ if isvector(f(x))
         delta_x = zeros(size(x));
         delta_x(i) = e;
         df(:, i) = (f(x + delta_x) - f(x - delta_x))/ (2 * e);
-    end
-    return;
-end
-
-%% If f is a matrix function
-    
-if ismatrix(f(x))
-    
-    df = zeros(size(f(x), 1), size(f(x), 2), length(x));
-    
-    for i = 1:length(x)
-        delta_x = zeros(size(x));
-        delta_x(i) = e;
-        df(:, :, i) = (f(x + delta_x) - f(x - delta_x))/ (2 * e);
     end
     
 end

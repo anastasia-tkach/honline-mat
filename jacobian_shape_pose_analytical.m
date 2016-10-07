@@ -1,4 +1,4 @@
-function [F, J, H] = jacobian_shape_pose_matlab(beta, theta, sizes, DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
+function [F, J, H] = jacobian_shape_pose_analytical(beta, theta, sizes, DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
 
 num_points = sizes(1);
 num_joints = sizes(2);
@@ -181,8 +181,6 @@ v = my_gradient(f, bt);
 h = @(bt) hessian_for_scalar_objective(F_(bt), J_(bt), H_(bt));
 vv = my_gradient(j, bt);
 %disp([vv; h(bt)]);
-
-
 
 
 
