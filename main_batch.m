@@ -1,12 +1,12 @@
 %clear; clc;
-rng default;
+%rng default;
 
 %% Parameters
 num_samples = 10;
 B = 3;
 T = 3;
 D = 3 * num_samples;
-settings.measurement_noise_std = 0.07; 
+settings.measurement_noise_std = 0.07;
 settings.beta_noise_std = 0.5;
 settings.theta_noise_std = 0.15;
 blocks = {[1, 2], [2, 3], [3, 4]};
@@ -19,48 +19,47 @@ theta_init = [0; 0; 0];
 theta_certain = [0, pi/3, pi/3];
 theta_uncertain = [0, 0, 0];
 thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain, 4, 1); repmat(theta_uncertain, 7, 1)];
-N = size(thetas_true, 1);
+num_frames = size(thetas_true, 1);
+
 [frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, ...
     settings.beta_noise_std, settings.theta_noise_std, settings.measurement_noise_std, num_samples);
+X_init = zeros((B + T) * num_frames, 1);
+for i = 1:num_frames
+    X_init((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = beta_init;
+    X_init((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
+end
 
-num_frames = size(thetas_true, 1);
 num_iters = 20;
 to_display = false;
-
-init_from_previous_frame = false;
 
 if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 0.8]);
     axis off; axis equal; hold on;
 end
 
-settings.quadratic_two = false;
+settings.laplace_approx = false;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
 settings.quadratic_all = false;
-settings.batch = true;
-settings.independent = false;
+settings.batch = false;
+settings.independent = true;
 settings.no_lm = false;
 
-settings.batch_size = num_frames;
+settings.batch_size = 1;
 
-w2 = 0;
+w2 = 1;
 
 %% Tracking
 for N = 1:num_frames
     %disp(N);
-    
-    %if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.8, 0.5]); axis off; axis equal; hold on; end
     
     %% Separate optimization
     if (settings.independent)
         X = zeros(N * (B + T), 1);
         J = zeros(N * (B + T), N * (B + T));
         for i = 1:N
-            x = [beta_init; thetas_init{i}];
-            [x, j] = my_lsqnonlin(@(x) sticks_finger_fg_single(x, segments0, joints, frames{i}), x, num_iters);
-            betas{i} = x(1:B);
-            thetas{i} = x(B + 1:B + T);
+            x = X_init((B + T) * (i - 1) + 1:(B + T) * i);
+            [x, j] = my_lsqnonlin(@(x) sticks_finger_fg_single(x, segments0, joints, frames{i}), x, num_iters);            
             X((B + T) * (i - 1) + 1:(B + T) * i) = x;
             J(D * (i - 1) + 1:D * i, (B + T) * (i - 1) + 1:(B + T) * i) = j;
         end
@@ -68,51 +67,42 @@ for N = 1:num_frames
     
     %% Batch optimization
     if (settings.batch)
-        X = zeros(N * (B + T), 1);
-        for i = 1:max(1, N - settings.batch_size + 1) - 1
-            X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = betas{i};
-            X((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas{i};
+
+        if N <= settings.batch_size
+            X = X_init(1:(B + T) * N);
+        else
+            X = [X(1:(B + T) * (N - settings.batch_size)); X_init((B + T) * (N - settings.batch_size) + 1:(B + T) * N)];
         end
-        for i = max(1, N - settings.batch_size + 1):N
-            X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = beta_init;
-            X((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
-        end
-        
+
         if (settings.no_lm)
             lambdas = zeros((B + T) * N, 1);
             indices = [zeros(B, 1); ones(T, 1)]; indices = repmat(indices, N, 1);
             lambdas(indices == 0) = 0.1; lambdas(indices == 1) = 50;
             for iter = 1:num_iters
                 [F, J] = sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings.batch_size, w2);
-                %delta = - (J' * J + lambda * eye(size(J, 2), size(J, 2))) \ (J' * F);
                 delta = - (J' * J + diag(lambdas)) \ (J' * F);
                 X = X + delta;
             end
         else
             [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings.batch_size, w2), X, num_iters);
         end
-        
-        %betas = cell(N, 1);
-        %thetas = cell(N, 1);
-        for i = max(1, N - settings.batch_size + 1):N
-            betas{i} = X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B);
-            thetas{i} = X((B + T) * (i - 1) + B + 1:(B + T) * i);
-        end
+
     end
     %% Display
     if (to_display)
+        betas_N = X((B + T) * (N - 1) + 1:(B + T) * (N - 1) + B);
+        thetas_N = X((B + T) * (N - 1) + B + 1:(B + T) * N);
         data_points = frames{N};
         [segments0, joints] = segments_and_joints_2D();
-        [segments0] = shape_2D(segments0, betas{i});
-        [segments] = pose_2D(segments0, joints, thetas{i});
+        [segments0] = shape_2D(segments0, betas_N);
+        [segments] = pose_2D(segments0, joints, thetas_N);
         [segment_indices, model_points] = compute_correspondences_2D(segments, blocks, data_points);
-        figure(1); clf; hold on; axis off; axis equal; set(gcf,'color','w');
-        display_sticks_finger(segments, data_points, model_points, iter);
+        clf; hold on; axis off; axis equal; set(gcf,'color','w');
+        display_sticks_finger(segments, data_points, model_points, num_iters);
     end
     
     %% Save history
-    history{N}.betas = betas;
-    history{N}.thetas = thetas;
+    history{N}.X = X;
     history{N}.JtJ = J' * J;
 end
 
@@ -146,45 +136,3 @@ for b = 1:B - 1
 end
 %}
 
-%% Display online equivalent
-%{
-figure_borders = [0.05 0.08 0.93 0.90];
-means = zeros(N, B);
-vars = zeros(N, B);
-trues = zeros(N, B);
-%beta_std = zeros(N, B);
-for i = 1:length(history)
-    means(i, :) = history{i}.betas{i};
-    trues(i, :) = beta_true;
-    if (run_kalman_filter)
-        vars(i, :) = diag(history{i}.P(1:B, 1:B));
-    else
-        vars(i, :) = diag(history{i}.JtJ((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B, (B + T) * (i - 1) + 1:(B + T) * (i - 1) + B));
-    end
-    %beta_std(i, :) = history{i}.beta_std;
-end
-
-figure('units', 'normalized', 'outerposition', [0.1, 0.2, 0.33, 0.7]); hold on;
-set(gca,'position', figure_borders, 'units','normalized');
-for i = 1:B - 1
-    h = subplot(B - 1, 1, i); hold on;
-    p = get(h, 'pos'); set(h, 'pos', [0.05, p(2) - 0.06, 0.9, 0.43]);
-    set(gca,'XTick',[]);
-    plot(1:length(history), means(:, i), '.-', 'lineWidth', 2, 'markersize', 13);
-    plot(1:length(history), trues(:, i), 'lineWidth', 2);
-    plot(1:length(history), beta_init(i) * ones(length(history), 1), 'lineWidth', 2, 'lineStyle', '-.');
-    
-    if (run_kalman_filter)
-        plot(1:length(history), means(:, i) + vars(:, i).^0.5, 'lineWidth', 2, 'color', [0.55, 0.75, 0.8]);
-        plot(1:length(history), means(:, i) - vars(:, i).^0.5, 'lineWidth', 2, 'color', [0.55, 0.75, 0.8]);
-    end
-    
-    %plot(1:length(history), trues(:, i) + 0.5 * beta_variance_threshold * ones(length(history), 1), 'lineWidth', 1, 'color', [0.7, 0.9, 0.5]);
-    %plot(1:length(history), trues(:, i) + 0.5 * beta_std(:, i).^2, 'lineWidth', 1, 'color', [0.4, 0.7, 0.5]);
-    
-    ylim([1.5, 4.5]); xlim([0, length(history)]);
-    set(gca, 'fontSize', 13); title(['beta ', num2str(i)]);
-end
-
-if exist('video_writer', 'var'), video_writer.close(); end
-%}

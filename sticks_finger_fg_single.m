@@ -18,4 +18,4 @@ thetas = x(B + 1:B + T);
 [segment_indices, model_points] = compute_correspondences_cpp_wrapper(segments, blocks, data_points);
 
 %% Compute Jacobians
-[F, J] = jacobian_shape_pose_cpp_wrapper(betas, thetas, segments, joints, model_points, data_points, segment_indices);
+[F, J] = jacobian_shape_pose_cpp_wrapper(betas, thetas, segments, joints, model_points, data_points, segment_indices, 'cpp');

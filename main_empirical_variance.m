@@ -1,6 +1,6 @@
 clear; clc;
 rng default;
-num_runs = 100;
+num_runs = 10;
 Histories = cell(num_runs, 1);
 for run_index = 1:num_runs
     disp(run_index);
@@ -19,7 +19,7 @@ current_run_importance = zeros(num_runs, 1);
 for i = 1:N
     for j = 1:i
         for run_index = 1:num_runs
-            current_run_results(run_index) = Histories{run_index}{i}.betas{j}(beta_index);
+            current_run_results(run_index) = Histories{run_index}{i}.X((B + T) * (j - 1) + beta_index);
             current_run_importance(run_index) = Histories{run_index}{i}.JtJ((B + T) * (j - 1) + beta_index, (B + T) * (j - 1) + beta_index).^0.5;
         end
         means(i, j) = mean(current_run_results);

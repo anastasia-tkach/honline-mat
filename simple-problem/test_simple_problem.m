@@ -1,4 +1,4 @@
-close all;
+% close all;
 % clc; clear;
 % rng default;
 
@@ -39,9 +39,9 @@ line_colors = {[0.3, 0.8, 1.0], [1, 0.6, 0.1]};
 point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 
 %% Optimize
-display = true;
+display = false;
 
-settings.quadratic_two = true;
+settings.laplace_approx = true;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
@@ -59,26 +59,24 @@ recompute_egh = true;
 X = [];
 for N = 1:num_data
     %% Quadratic two
-    if (settings.quadratic_two)
-        if N <= settings.batch_size
-            X0 = x_init * ones(N, 1);
-        else
-            X0 = [X(1:N - settings.batch_size); x_init * ones(settings.batch_size, 1)];
-        end
+    if (settings.laplace_approx)
         if N < 3
+            X0 = x_init * ones(N, 1);
             [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent), X0, num_iters);            
         else
-            X0 = [X; x_init];
+            X_prev = [X; x_init];
+            X0 = [X(1:N - 2); x_init * ones(2, 1)];
             %[xx_opt, J] = simple_problem_quadratic_two(X0, Y, T, N, w2);
             if N == 3, h = zeros(3, 2, 2); end
-            [xx_opt, J, h] = simple_problem_quadratic_two_lsqnonlin(X0, h, Y, T, N, w2, num_iters);
+            [xx_opt, J, h] = simple_problem_laplace_approx(X0, X_prev, h, Y, T, N, w2, num_iters);            
+            J = sqrtm(h); %disp([J' * J, h]);
+            
             X = [X(1:N - 2); xx_opt];
             
-            %%
-            draw_covariance_matrix(xx_opt, inv(h)); xlim([-3, 3]); ylim([-3, 3]);
-            mypoint([-1, -1], [1, 0.7, 0], 50);
-            %%
-            J = sqrtm(h); %disp([J' * J, h]);            
+            %% Draw covariance
+            %draw_covariance_matrix(xx_opt, inv(h)); xlim([-3, 3]); ylim([-3, 3]);
+            %mypoint([-1, -1], [1, 0.7, 0], 50);
+                        
         end
         JtJ = J'* J;
     end
@@ -191,7 +189,7 @@ for N = 1:num_data
     
     %% Record history
     history{N}.X = X;
-    if (settings.quadratic_two)
+    if (settings.laplace_approx)
         if N < 3
             history{N}.JtJ = JtJ;
         else

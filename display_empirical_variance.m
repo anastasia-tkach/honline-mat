@@ -51,7 +51,7 @@ end
 
 set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
 algorithm_name = '';
-if settings.quadratic_two == true, algorithm_name = 'quadratic-two'; end
+if settings.laplace_approx == true, algorithm_name = 'quadratic-two'; end
 if settings.last_n == true, algorithm_name = 'last-n'; end
 if settings.kalman_like == true, algorithm_name = 'kalman-like'; end
 if settings.kalman == true, algorithm_name = 'kalman'; end
