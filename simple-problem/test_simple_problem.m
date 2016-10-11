@@ -1,6 +1,6 @@
-% close all;
+close all;
 % clc; clear;
-% rng(978);
+% rng default;
 
 ylimit = [-1.8, -0.2]; X = []; num_iters = 50;
 t_start = 0.01; t_end = 4.0;
@@ -20,7 +20,7 @@ certain = t_start + 0.5;
 uncertain = t_end - 0.2;
 %T = linspace(t_start + 0.3, t_end - 0.1, 11);
 %T = [linspace(t_end - 0.1, t_end - 0.3, 3)'; linspace(t_start + 0.4, t_start + 0.6, 4)'; linspace(t_end - 0.35, t_end - 0.15, 7)';]; % MAIN ROBLEM
-T = [uncertain * ones(3, 1); certain * ones(4, 1); uncertain * ones(8, 1);];
+T = [uncertain * ones(4, 1); certain * ones(4, 1); uncertain * ones(7, 1);];
 %T = [uncertain * ones(10, 1); certain * ones(5, 1); uncertain * ones(10, 1); certain * ones(5, 1); uncertain * ones(10, 1); certain * ones(5, 1); uncertain * ones(30, 1)];
 
 num_data = length(T);
@@ -39,14 +39,16 @@ line_colors = {[0.3, 0.8, 1.0], [1, 0.6, 0.1]};
 point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 
 %% Optimize
-display = false;
+display = true;
 
-settings.quadratic_two = false;
+settings.quadratic_two = true;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
 settings.quadratic_all = false;
-settings.batch = true;
+settings.batch = false;
+settings.independent = false;
+settings.no_lm = false;
 
 w2 = 1; w3 = 1;
 
@@ -67,8 +69,16 @@ for N = 1:num_data
             [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent), X0, num_iters);            
         else
             X0 = [X; x_init];
-            [xx_opt, J] = simple_problem_quadratic_two(X0, Y, T, N, w2);
+            %[xx_opt, J] = simple_problem_quadratic_two(X0, Y, T, N, w2);
+            if N == 3, h = zeros(3, 2, 2); end
+            [xx_opt, J, h] = simple_problem_quadratic_two_lsqnonlin(X0, h, Y, T, N, w2, num_iters);
             X = [X(1:N - 2); xx_opt];
+            
+            %%
+            draw_covariance_matrix(xx_opt, inv(h)); xlim([-3, 3]); ylim([-3, 3]);
+            mypoint([-1, -1], [1, 0.7, 0], 50);
+            %%
+            J = sqrtm(h); %disp([J' * J, h]);            
         end
         JtJ = J'* J;
     end
@@ -249,8 +259,8 @@ if display
                 line_width = 4.5;
             end
             importance = history{j}.JtJ(k, k);
-            myline([j + offset * k, history{j}.X(k) + 0.5 * sqrt(importance)], ...
-                [j + offset * k, history{j}.X(k) - 0.5 * sqrt(importance)], current_line_color, line_width);
+            myline([j + offset * k, history{j}.X(k) + 0.1 * sqrt(importance)], ...
+                [j + offset * k, history{j}.X(k) - 0.1 * sqrt(importance)], current_line_color, line_width);
             mypoint([j + offset * k, history{j}.X(k)], current_point_color, point_size);
         end
     end

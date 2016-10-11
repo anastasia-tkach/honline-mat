@@ -49,7 +49,7 @@ for j = 1:N
     end
 end
 
-set(gca, 'fontSize', 14); set(gca,'fontname','Cambria');
+set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
 algorithm_name = '';
 if settings.quadratic_two == true, algorithm_name = 'quadratic-two'; end
 if settings.last_n == true, algorithm_name = 'last-n'; end
@@ -72,7 +72,7 @@ if strcmp(problem_type, 'sticks_finger')
     title_string = [title_string, '     \sigma_{\theta} = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.theta_noise_std), '\color[rgb]{0.25 0.25 0.25}'];
 end
 
-title(title_string, 'interpreter','tex', 'FontWeight','Normal', 'fontsize', 20);
+title(title_string, 'interpreter','tex', 'FontWeight','Normal', 'fontsize', 16);
 
 xlim([1, N + 1]); 
 yyaxis left; ax = gca; ax.YColor = [0.8 0.3 0]; ax.YLim = ylimit; ylabel('\mu(x) \pm \sigma(x)');

@@ -32,7 +32,7 @@ end
 
 frame_centrainty = T < 1.5;
 
-display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ylimit, settings, N, w2, frame_centrainty);
+display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ylimit, settings, N, w2, frame_centrainty, 'simplest_problem');
 
 %% Display last iterations
 %{
