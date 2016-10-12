@@ -4,6 +4,10 @@ w = N * 0.040909;
 offset = 1/N;
 line_color = [1, 0.85, 0.5];
 point_color = [1.0 0.5 0.3]; %[0.3, 0.6, 0.8];
+
+certain_line_color = [0.75, 0.9, 0.7];
+certain_point_color =  [0.25, 0.75, 0.35];
+
 f = figure('units', 'normalized', 'outerposition', [0.1, 0.3, w, 0.55]); hold on;
 set(gca,'position', [0.06 0.06 0.87 0.85], 'units','normalized');
 for j = 1:N
@@ -20,13 +24,23 @@ max_value = max(importance_means(:) + importance_standard_deviations(:));
 for j = 1:N
     
     for k = 1:j
-        current_line_color = (1 - k / j ) * [0.95, 0.88, 0.88] + k / j * line_color;
-        current_point_color = (1 - k / j ) * [0.85, 0.75, 0.75] + k / j * point_color;
+        if (frame_centrainty(k) == 0)
+            current_line_color = (1 - k / j ) * [0.95, 0.88, 0.88] + k / j * line_color;
+            current_point_color = (1 - k / j ) * [0.85, 0.75, 0.75] + k / j * point_color;
+        else
+            current_line_color = (1 - k / j ) * [0.95, 0.88, 0.88] + k / j * certain_line_color;
+            current_point_color = (1 - k / j ) * [0.85, 0.75, 0.75] + k / j * certain_point_color;
+        end
         point_size = 20;
         line_width = 3.2;
         if k == j
-            current_line_color = [1, 0.75, 0.3];
-            current_point_color = [1.0 0.45 0.3];%[0.3, 0.7, 0.8];
+            if (frame_centrainty(k) == 0)
+                current_line_color = [1, 0.75, 0.3];
+                current_point_color = [1.0 0.45 0.3];
+            else
+                current_line_color =  [157, 216, 105]/255;
+                current_point_color =  [0.1, 0.7, 0.3];
+            end
             point_size = 40;
             line_width = 4.5;
         end
@@ -51,7 +65,7 @@ end
 
 set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
 algorithm_name = '';
-if settings.laplace_approx == true, algorithm_name = 'quadratic-two'; end
+if settings.laplace_approx == true, algorithm_name = 'laplace-approx'; end
 if settings.last_n == true, algorithm_name = 'last-n'; end
 if settings.kalman_like == true, algorithm_name = 'kalman-like'; end
 if settings.kalman == true, algorithm_name = 'kalman'; end

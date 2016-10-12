@@ -15,7 +15,7 @@ end
 
 close all;
 clear; clc;
-rng(3453);
+rng(11);
 
 %% Parameters
 num_samples = 3;
@@ -43,7 +43,6 @@ theta = theta_init;
 [segments0] = shape_2D(segments0, beta);
 [segments] = pose_2D(segments0, joints, theta);
 
-
 %% Tracking
 %figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 0.8]); axis off; axis equal; hold on;
 
@@ -60,10 +59,11 @@ for n = 1:N
     end
    
     %[F, G, H] = sticks_finger_eg_single([beta; theta], segments0, joints, data_points, 'numerical');
-    [F_, G_, H_] = sticks_finger_eg_single([beta; theta], segments0, joints, data_points, 'analytical');
-    %[F_cpp, G_cpp, H_cpp] = sticks_finger_eg_single([beta; theta], segments0, joints, data_points, 'cpp');
+    [F_, G_, H_] = sticks_finger_fg_data([beta; theta], segments0, joints, data_points, 'analytical');
+    [F_cpp, G_cpp, H_cpp] = sticks_finger_fg_data([beta; theta], segments0, joints, data_points, 'cpp');
     
-    disp(G_);
+    imagesc(G_ - G_cpp); colorbar;
+    disp([G_, G_cpp]);
     
     %disp([F; F_; F_cpp]);
     

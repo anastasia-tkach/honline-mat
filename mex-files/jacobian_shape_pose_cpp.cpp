@@ -6,24 +6,27 @@
 
 void jacobian_pose(const mlx_array<mlx_double> & beta, const mlx_array<mlx_double> & theta,
         mwSize num_points, mwSize num_segments, mwSize num_joints, mwSize max_kinematic_chain, const mlx_array<mlx_double> & DataPoints,
-        const mlx_array<mlx_double> & ModelPoints, const mlx_array<mlx_double> & segment_indices, const mlx_array<mlx_double> & SegmentsKinematicChain, 
+        const mlx_array<mlx_double> & ModelPoints, const mlx_array<mlx_double> & segment_indices, const mlx_array<mlx_double> & SegmentsKinematicChain,
         const mlx_array<mlx_double> & SegmentsGlobal, const mlx_array<mlx_double> & JointsSegmentId, const mlx_array<mlx_double> & JointsAxis,
         mlx_array<mlx_double> & F, mlx_array<mlx_double> & J) {
     
     for (int k = 0; k < num_points; k++) {
+        //mexPrintf("\nk = %d\n", k);
         Eigen::Vector3d d = Eigen::Vector3d(DataPoints(k, 0), DataPoints(k, 1), 0);
         Eigen::Vector3d m = Eigen::Vector3d(ModelPoints(k, 0), ModelPoints(k, 1), 0);
         Eigen::Vector3d n = (d - m) / (d - m).norm();
         
-        Eigen::Matrix<double, 3, Eigen::Dynamic> j = Eigen::Matrix<double, 3, Eigen::Dynamic> (3, num_segments - 1 + num_joints - 1);
+        Eigen::Matrix<double, 3, Eigen::Dynamic> j = Eigen::Matrix<double, 3, Eigen::Dynamic> ::Zero(3, num_segments - 1 + num_joints - 1);
         
-        for (int l = 0; l < max_kinematic_chain; l++) {
+        for (int l = 0; l < max_kinematic_chain; l++) {            
             if (SegmentsKinematicChain(segment_indices(k, 0) - 1, l) == -1) break;
+            
+            //mexPrintf("l = %d\n", l);
             
             mwIndex joint_id = (mwIndex) SegmentsKinematicChain(segment_indices(k, 0) - 1, l) - 1;
             mwIndex segment_id = (mwIndex) JointsSegmentId(joint_id, 0) - 1;
             Eigen::Vector4d u = Eigen::Vector4d(JointsAxis(joint_id, 0), JointsAxis(joint_id, 1), JointsAxis(joint_id, 2), 1);
-             
+            
             Eigen::Vector3d p = Eigen::Vector3d(SegmentsGlobal(segment_id, 12), SegmentsGlobal(segment_id, 13), SegmentsGlobal(segment_id, 14));
             
             Eigen::Matrix<double, 4, 4> T = Eigen::Matrix<double, 4, 4>();
@@ -34,29 +37,48 @@ void jacobian_pose(const mlx_array<mlx_double> & beta, const mlx_array<mlx_doubl
                 }
                 //mexPrintf("\n");
             }
-            //mexPrintf("\n");      
+            //mexPrintf("\n");
             
             // shape
             Eigen::Vector4d w4  = T * Eigen::Vector4d(0, 1, 0, 1);
             Eigen::Vector3d w = Eigen::Vector3d(w4(0) / w4(3), w4(1) / w4(3), w4(2) / w4(3));
-            w = w - p;   
+            w = w - p;
             
             double c = 1;
             bool last_in_kinematic_chain = SegmentsKinematicChain(segment_indices(k, 0) - 1, l + 1) == -1;
             if (l == 2 || last_in_kinematic_chain)
-                c = (m - p).norm() / beta(l, 0); 
-                        
+                c = (m - p).norm() / beta(l, 0);
             j.col(segment_id) = c * w;
             
             // pose
-            Eigen::Vector4d v4 = T * u; 
+            Eigen::Vector4d v4 = T * u;
             Eigen::Vector3d v = Eigen::Vector3d(v4(0) / v4(3), v4(1) / v4(3), v4(2) / v4(3));
-            v = v - p;            
+            v = v - p;
             j.col(num_segments - 1 + joint_id) = v.cross(m - p);
-        } 
-
-        for (int var = 0; var < num_segments - 1 + num_joints - 1; var++) 
+            
+            
+            /*mexPrintf("w = %f %f %f\n", w(0), w(1), w(2));
+            mexPrintf("c = %f\n", c);
+            mexPrintf("v = %f %f %f\n", v(0), v(1), v(2));
+            mexPrintf("m = %f %f %f\n", m(0), m(1), m(2));
+            mexPrintf("p = %f %f %f\n", p(0), p(1), p(2));
+            mexPrintf("n = %f %f %f\n", n(0), n(1), n(2));
+            mexPrintf("d = %f %f %f\n", d(0), d(1), d(2));*/
+            
+        }
+        /*mexPrintf("j = \n");
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < num_segments - 1 + num_joints - 1; x++) {             
+                mexPrintf("%f\t", j(y, x));
+            }
+            mexPrintf("\n ");
+        }*/        
+        
+        for (int var = 0; var < num_segments - 1 + num_joints - 1; var++) {
             J(k, var) = - n.dot(j.col(var));
+            //mexPrintf("%f\t", J(k, var));
+        }
+        //mexPrintf("\n");
         F(k, 0) = n.dot(d - m);
     }
     

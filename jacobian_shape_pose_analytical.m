@@ -44,6 +44,7 @@ for k = 1:num_points
         if l == 3 || segment_kinematic_chain(l + 1) == -1
            c = norm(m - p) / beta(l); 
         end
+
         j(:, segment_id) = c * v;
         
         %% pose
@@ -52,6 +53,7 @@ for k = 1:num_points
         j(:, num_segments - 1 + joint_id) = cross(v, m - p)';
     end
     
+    %{
     %% compute hessian - function
     bt = [beta; theta];
     if segment_kinematic_chain(2) == -1    
@@ -148,14 +150,15 @@ for k = 1:num_points
     
     ddm = @(bt) shiftdim([- n(1:2)' * dm_ddb1(bt); - n(1:2)' * dm_ddb2(bt); - n(1:2)' * dm_ddb3(bt); - n(1:2)' * dm_ddt1(bt); - n(1:2)' * dm_ddt2(bt); - n(1:2)' * dm_ddt3(bt)], -1);
     H(k, :, :) = ddm(bt); 
-    
+    %}
     %% Sstore to matrices 
     F(k) = n' * (d - m);   
     J(k, :) = - n' * j;
-    
+    %{
     F_ = @(bt) [F_(bt); n(1:2)' * (d(1:2) - m_(bt))];
     J_ = @(bt) [J_(bt); - n(1:2)' * dm_(bt)];
     H_ = @(bt) [H_(bt); ddm(bt)];
+    %}
 end
 
 %{
@@ -170,6 +173,7 @@ end
 %}
 
 %% Compute scalar functions
+%{
 f = @(bt) F_(bt)' * F_(bt);    
 j = @(bt) 2 * F_(bt)' * J_(bt);    
 v = my_gradient(f, bt);
@@ -178,7 +182,7 @@ v = my_gradient(f, bt);
 h = @(bt) hessian_for_scalar_objective(F_(bt), J_(bt), H_(bt));
 vv = my_gradient(j, bt);
 %disp([vv; h(bt)]);
-
+%}
 
 
 

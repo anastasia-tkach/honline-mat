@@ -45,7 +45,7 @@ settings.batch = true;
 settings.independent = false;
 settings.no_lm = false;
 
-settings.batch_size = 5;
+settings.batch_size = 2;
 
 w2 = 1;
 
@@ -63,10 +63,10 @@ for N = 1:num_frames
             X_prev = [X; X_init((B + T) * (N - 1) + 1:(B + T) * N)];
             X0 = [X(1:(B + T) * (N - 2)); X_init((B + T) * (N - 2) + 1:(B + T) * N)];
             
-            [xx_opt, J, h] = simple_problem_quadratic_two_lsqnonlin(X0, X_prev, h, frames, N, w2, num_iters);
+            [xx_opt, J, h] = sticks_finger_laplace_approx(X0, X_prev, h, segments0, joints, frames, N, w2, num_iters);
             J = sqrtm(h); %disp([J' * J, h]);
             
-            X = [X(1:(B + T) * (N - 2)); xx_opt];           
+            X = [X(1:(B + T) * (N - 2)); xx_opt];    
         end
     end
     
@@ -120,7 +120,22 @@ for N = 1:num_frames
     
     %% Save history
     history{N}.X = X;
-    history{N}.JtJ = J' * J;
+    if N < 3 || settings.batch
+        %history{N}.JtJ = J' * J;
+        history{N}.JtJ = zeros((B + T) * N, (B + T) * N);
+        if N > 1
+            history{N}.JtJ(1:(B + T) * max(1, N - settings.batch_size), 1:(B + T) * max(1, N - settings.batch_size)) = ...
+                history{N - 1}.JtJ(1:(B + T) * max(1, N - settings.batch_size), 1:(B + T) * max(1, N - settings.batch_size));
+        end
+        JtJ = J' * J;
+        history{N}.JtJ((B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N, (B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N) = ...
+            JtJ((B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N, (B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N);
+    end
+    if N >= 3 && settings.laplace_approx
+        history{N}.JtJ = zeros((B + T) * N, (B + T) * N);
+        history{N}.JtJ(1:(B + T) * (N - 2), 1:(B + T) * (N - 2)) = history{N - 1}.JtJ(1:(B + T) * (N - 2), 1:(B + T) * (N - 2));
+        history{N}.JtJ((B + T) * (N - 2) + 1:(B + T) * N, (B + T) * (N - 2) + 1:(B + T) * N) = J' * J;
+    end
 end
 
 

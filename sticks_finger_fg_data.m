@@ -1,4 +1,4 @@
-function [F, J] = sticks_finger_fg_data(x, segments0, joints, data_points)
+function [F, J, H] = sticks_finger_fg_data(x, segments0, joints, data_points)
 
 %disp(x);
 
@@ -15,4 +15,4 @@ thetas = x(B + 1:B + T);
 [segment_indices, model_points] = compute_correspondences_cpp_wrapper(segments, blocks, data_points);
 
 %% Compute Jacobians
-[F, J] = jacobian_shape_pose_cpp_wrapper(betas, thetas, segments, joints, model_points, data_points, segment_indices, 'cpp');
+[F, J, H] = jacobian_shape_pose_cpp_wrapper(betas, thetas, segments, joints, model_points, data_points, segment_indices, 'cpp');

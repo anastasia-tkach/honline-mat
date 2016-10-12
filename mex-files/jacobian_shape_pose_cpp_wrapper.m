@@ -37,10 +37,12 @@ end
 
 if strcmp(jacobian_type, 'numerical')
     [F, J, H] = jacobian_shape_pose_matlab(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);
+    H = zeros(size(F, 1), 6, 6);
 end
 
 if strcmp(jacobian_type, 'analytical')
     [F, J, H] = jacobian_shape_pose_analytical(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);
+    %H = zeros(size(F, 1), 6, 6);
 end
 
 
