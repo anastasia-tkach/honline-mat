@@ -41,11 +41,11 @@ settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
 settings.quadratic_all = false;
-settings.batch = false;
-settings.independent = true;
+settings.batch = true;
+settings.independent = false;
 settings.no_lm = false;
 
-settings.batch_size = 1;
+settings.batch_size = 5;
 
 w2 = 1;
 
@@ -53,13 +53,30 @@ w2 = 1;
 for N = 1:num_frames
     %disp(N);
     
+    %% Laplace approximation
+    if (settings.laplace_approx)
+        if N < 3
+            X = X_init(1:(B + T) * N);
+            [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings.batch_size, w2), X, num_iters);
+            h = zeros(3, 2, 2);
+        else
+            X_prev = [X; X_init((B + T) * (N - 1) + 1:(B + T) * N)];
+            X0 = [X(1:(B + T) * (N - 2)); X_init((B + T) * (N - 2) + 1:(B + T) * N)];
+            
+            [xx_opt, J, h] = simple_problem_quadratic_two_lsqnonlin(X0, X_prev, h, frames, N, w2, num_iters);
+            J = sqrtm(h); %disp([J' * J, h]);
+            
+            X = [X(1:(B + T) * (N - 2)); xx_opt];           
+        end
+    end
+    
     %% Separate optimization
     if (settings.independent)
         X = zeros(N * (B + T), 1);
         J = zeros(N * (B + T), N * (B + T));
         for i = 1:N
             x = X_init((B + T) * (i - 1) + 1:(B + T) * i);
-            [x, j] = my_lsqnonlin(@(x) sticks_finger_fg_single(x, segments0, joints, frames{i}), x, num_iters);            
+            [x, j] = my_lsqnonlin(@(x) sticks_finger_fg_single(x, segments0, joints, frames{i}), x, num_iters);
             X((B + T) * (i - 1) + 1:(B + T) * i) = x;
             J(D * (i - 1) + 1:D * i, (B + T) * (i - 1) + 1:(B + T) * i) = j;
         end
@@ -67,13 +84,13 @@ for N = 1:num_frames
     
     %% Batch optimization
     if (settings.batch)
-
+        
         if N <= settings.batch_size
             X = X_init(1:(B + T) * N);
         else
             X = [X(1:(B + T) * (N - settings.batch_size)); X_init((B + T) * (N - settings.batch_size) + 1:(B + T) * N)];
         end
-
+        
         if (settings.no_lm)
             lambdas = zeros((B + T) * N, 1);
             indices = [zeros(B, 1); ones(T, 1)]; indices = repmat(indices, N, 1);
@@ -86,7 +103,7 @@ for N = 1:num_frames
         else
             [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings.batch_size, w2), X, num_iters);
         end
-
+        
     end
     %% Display
     if (to_display)

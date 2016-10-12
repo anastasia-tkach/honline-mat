@@ -1,4 +1,4 @@
-function [F, J, h] = simple_problem_fg_laplace_approx_analytical(xx, x_0, y, t, h_, w2)
+function [F, J, h] = sticks_finger_fg_laplace_approx_analytical(xx, x_0, data_points, h_, w2)
 
 %% Data term
 F1 = @(xx) exp(xx(2) * t)^2 - y;
@@ -34,8 +34,8 @@ else
     B = h_(1, 2);
     C = h_(2, 1);
     D = h_(2, 2);
-    %ddQ_dx2_dx2 = D - C * inv(A) * B;
-    ddQ_dx2_dx2 = D;
+    ddQ_dx2_dx2 = D - C * inv(A) * B;
+    %ddQ_dx2_dx2 = D;
     ddQ_dx2_dx2_sqrt = sqrt(ddQ_dx2_dx2);
     Q = @(xx) ddQ_dx2_dx2_sqrt * (xx(1) - x_0);
     dQ_dx1 = @(xx) ddQ_dx2_dx2_sqrt;

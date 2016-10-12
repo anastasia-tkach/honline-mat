@@ -1,4 +1,4 @@
-function [F, J, h] = simple_problem_fg_quadratic_two_lsqnonlin(xx, x_0, y, t, h_, w2)
+function [F, J, h] = simple_problem_fg_laplace_approx(xx, x_0, y, t, h_, w2)
 
 %%{
 %% Data term

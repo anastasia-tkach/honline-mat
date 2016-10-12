@@ -1,16 +1,13 @@
-function [F, J] = sticks_finger_fg_single(x, segments0, joints, data_points)
+function [F, J] = sticks_finger_fg_data(x, segments0, joints, data_points)
 
 %disp(x);
 
 blocks = {[1, 2], [2, 3], [3, 4]};
 B = 3; T = 3;
 
-%% Update
+%% Initialize
 betas = x(1:B);
 thetas = x(B + 1:B + T);
-
-
-%% Initialize
 [segments] = shape_2D(segments0, betas);
 [segments] = pose_2D(segments, joints, thetas);
 
