@@ -42,12 +42,13 @@ settings.kalman_like = false;
 settings.kalman = false;
 settings.quadratic_all = false;
 settings.batch = true;
-settings.independent = false;
 settings.no_lm = false;
 
-settings.batch_size = 2;
+settings.batch_size = 3;
+settings.independent = true;
 
 w2 = 1;
+X = [];
 
 %% Tracking
 for N = 1:num_frames
@@ -57,17 +58,51 @@ for N = 1:num_frames
     if (settings.laplace_approx)
         if N < 3
             X = X_init(1:(B + T) * N);
-            [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings.batch_size, w2), X, num_iters);
+            [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings, w2), X, num_iters);
             h = zeros(3, 2, 2);
         else
             X_prev = [X; X_init((B + T) * (N - 1) + 1:(B + T) * N)];
             X0 = [X(1:(B + T) * (N - 2)); X_init((B + T) * (N - 2) + 1:(B + T) * N)];
             
             [xx_opt, J, h] = sticks_finger_laplace_approx(X0, X_prev, h, segments0, joints, frames, N, w2, num_iters);
-            J = sqrtm(h); %disp([J' * J, h]);
+            %h_diag = diag(h);
+            %h_diag = [h_diag(1:B); ones(T, 1); h_diag(B + 1:2 * B); ones(T, 1)];
+            %J = sqrtm(diag(h_diag));
             
-            X = [X(1:(B + T) * (N - 2)); xx_opt];    
+            J = sqrtm(h);
+            
+            X = [X(1:(B + T) * (N - 2)); xx_opt];
         end
+    end
+    
+    %% Kalman-like
+    if (settings.kalman_like)
+        x = X_init((B + T) * (N - 1) + 1:(B + T) * N);
+        if (N == 1)
+            x_prev = [];
+            JtJ = zeros(B, B);
+        else
+            x_prev = X((B + T) * (N - 2) + 1:(B + T) * (N - 1));
+        end
+        
+        [x, J] = my_lsqnonlin(@(x) sticks_finger_fg_kalman_like(x, x_prev, segments0, joints, frames{N}, JtJ, N, w2), x, num_iters);
+        
+        J1 = J(1:D, 1:B);
+        JtJ = JtJ + (J1'* J1);
+        X = [X; x];
+    end
+    
+    %% Kalman
+    if (settings.kalman)
+        if (N == 1)
+            x = X_init((B + T) * (N - 1) + 1:(B + T) * N);
+            C = zeros(B + T, B + T);
+        else            
+            x = X_init((B + T) * (N - 1) + 1:(B + T) * N);
+            x(1:B) = X((B + T) * (N - 2) + 1:(B + T) * (N - 2) + B);
+        end
+        [x, C] = sticks_finger_kalman(x, C, segments0, joints, frames{N}, num_iters);
+        X = [X; x]; JtJ = C(1:B, 1:B);
     end
     
     %% Separate optimization
@@ -76,7 +111,7 @@ for N = 1:num_frames
         J = zeros(N * (B + T), N * (B + T));
         for i = 1:N
             x = X_init((B + T) * (i - 1) + 1:(B + T) * i);
-            [x, j] = my_lsqnonlin(@(x) sticks_finger_fg_single(x, segments0, joints, frames{i}), x, num_iters);
+            [x, j] = my_lsqnonlin(@(x) sticks_finger_fg_data(x, segments0, joints, frames{i}), x, num_iters);
             X((B + T) * (i - 1) + 1:(B + T) * i) = x;
             J(D * (i - 1) + 1:D * i, (B + T) * (i - 1) + 1:(B + T) * i) = j;
         end
@@ -101,7 +136,7 @@ for N = 1:num_frames
                 X = X + delta;
             end
         else
-            [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings.batch_size, w2), X, num_iters);
+            [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings, w2), X, num_iters);
         end
         
     end
@@ -120,8 +155,7 @@ for N = 1:num_frames
     
     %% Save history
     history{N}.X = X;
-    if N < 3 || settings.batch
-        %history{N}.JtJ = J' * J;
+    if settings.batch || settings.independent || (settings.laplace_approx && N < 3)
         history{N}.JtJ = zeros((B + T) * N, (B + T) * N);
         if N > 1
             history{N}.JtJ(1:(B + T) * max(1, N - settings.batch_size), 1:(B + T) * max(1, N - settings.batch_size)) = ...
@@ -135,6 +169,11 @@ for N = 1:num_frames
         history{N}.JtJ = zeros((B + T) * N, (B + T) * N);
         history{N}.JtJ(1:(B + T) * (N - 2), 1:(B + T) * (N - 2)) = history{N - 1}.JtJ(1:(B + T) * (N - 2), 1:(B + T) * (N - 2));
         history{N}.JtJ((B + T) * (N - 2) + 1:(B + T) * N, (B + T) * (N - 2) + 1:(B + T) * N) = J' * J;
+    end
+    if settings.kalman_like || settings.kalman
+        history{N}.JtJ = zeros((B + T) * N, (B + T) * N);
+        if (N > 1), history{N}.JtJ(1:(B + T) * (N - 1), 1:(B + T) * (N - 1)) = history{N - 1}.JtJ; end
+        history{N}.JtJ((B + T) * (N - 1) + 1: (B + T) * (N - 1) + B, (B + T) * (N - 1) + 1: (B + T) * (N - 1) + B) = JtJ;
     end
 end
 

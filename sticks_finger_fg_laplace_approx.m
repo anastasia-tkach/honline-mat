@@ -27,24 +27,32 @@ ddF2 = zeros(M, 2 * M, 2 * M);
 
 %% Quadratic approx
 if isempty(x_0)
-  Q = zeros(B, 1);
-  dQ = zeros(B, 2 * M);  
-  ddQ = zeros(B, 2 * M, 2 * M);
+    Q = zeros(B, 1);
+    dQ = zeros(B, 2 * M);
+    ddQ = zeros(B, 2 * M, 2 * M);
 else
-  a = h_(1:B, 1:B);
-  b = h_(1:B, M + 1:M + B);
-  c = h_(M + 1:M + B, 1:B);
-  d = h_(M + 1:M + B, M + 1:M + B);
-  
-  ddQ_dx2_dx2 = d - c * inv(a) * b;
-  %ddQ_dx2_dx2 = d;  
-  ddQ_dx2_dx2_sqrt = real(sqrtm(ddQ_dx2_dx2));
-  
-  Q = ddQ_dx2_dx2_sqrt * (xx(1:B) - x_0(1:B));
-  dQ_dx1 = [ddQ_dx2_dx2_sqrt, zeros(B, T)];
-  dQ_dx2 = zeros(B, M);
-  dQ = [dQ_dx1, dQ_dx2];
-  ddQ = zeros(B, 2 * M, 2 * M);
+    a = h_(1:B, 1:B);
+    b = h_(1:B, M + 1:M + B);
+    c = h_(M + 1:M + B, 1:B);
+    d = h_(M + 1:M + B, M + 1:M + B);
+    
+    %a = h_(1:B, 1:B);
+    %b = h_(1:B, B + 1:2 * B);
+    %c = h_(B + 1:2 * B, 1:B);
+    %d = h_(B + 1:2 * B, B + 1:2 * B);
+    
+    ddQ_dx2_dx2 = d - c * inv(a) * b;
+    
+    %ddQ_dx2_dx2 = d - 4 * w2 * w2 * inv(a);    
+   
+    %ddQ_dx2_dx2 = d;
+    ddQ_dx2_dx2_sqrt = real(sqrtm(ddQ_dx2_dx2));
+    
+    Q = ddQ_dx2_dx2_sqrt * (xx(1:B) - x_0(1:B));
+    dQ_dx1 = [ddQ_dx2_dx2_sqrt, zeros(B, T)];
+    dQ_dx2 = zeros(B, M);
+    dQ = [dQ_dx1, dQ_dx2];
+    ddQ = zeros(B, 2 * M, 2 * M);
 end
 
 F = [Q; F1; F2];
@@ -52,8 +60,20 @@ J = [dQ; dF1; dF2];
 H = [ddQ; ddF1; ddF2];
 
 %% Hessian for scalar objective
-df = F' * F;  
-j = 2 * F' * J;  
+df = F' * F;
+j = 2 * F' * J;
 %h = hessian_for_scalar_objective(F, J, H);
+
 h = 2 * J' * J;
+
+% h = 2 * (dQ(:, [1:B, M + 1:M + B])' * dQ(:, [1:B, M + 1:M + B]) + dF1(:, [1:B, M + 1:M + B])' * dF1(:, [1:B, M + 1:M + B]) + dF2(:, [1:B, M + 1:M + B])' * dF2(:, [1:B, M + 1:M + B]));
+% 
+% a = 2 * dQ(:, 1:B)' * dQ(:, 1:B)' + 2 * w2 * eye(B, B);
+% d = 2 * dF1(:, M + 1:M + B)' *  dF1(:, M + 1:M + B) + 2 * w2 * eye(B, B);
+% b = -2 * w2 * eye(B, B);
+% c = -2 * w2 * eye(B, B);
+% h = [a, b; c, d];
+
+
+
 

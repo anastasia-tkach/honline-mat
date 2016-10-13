@@ -1,18 +1,32 @@
-function [] = sticks_finger_kalman()
+function [x, C] = sticks_finger_kalman(x, C, segments0, joints, data_points, num_iters)
 
-F1 = f1{N};
-J1 = j1{N};
-I = diag([0.1 * ones(B, 1); 50 * ones(T, 1)]);
+DOES NOT WORK
+
+B = 3; T = 3;
+r = 0.2;
 R = diag(r * ones(B + T, 1));
-dx = [betas{N}; thetas{N}] - [beta0; theta0];
-J2 = sqrt(I);  H = [J1; J2];
-F2 = zeros(B + T, 1); F = [F1; F2];
-LHS = H' * H + R * C_;
-%delta = LHS \ (J1' * F1);
-delta = -dx + LHS \ (H' * (F + H * dx));
-if (iter == num_iters)
-    C = C_ + 1/r * (J1' * J1 + I);
-    C_ = inv(inv(C) + Q);
-    P = inv(C);
+x0 = x;
+
+I = diag([0.5 * ones(B, 1); 50 * ones(T, 1)]);
+for iter = 1:num_iters
+    dx = x - x0;
+    [F1, J1, ~] = sticks_finger_fg_data(x, segments0, joints, data_points);
+
+    J2 = sqrt(I);
+    J = [J1; J2];
+    F2 = zeros(B + T, 1);
+    F = [F1; F2];
+    
+    %LHS = J' * J;
+    %delta = - LHS \ (J' * F);
+    
+    LHS = J' * J + R * C;
+    delta = -dx + LHS \ (J' * (F + J * dx));
+    
+    x = x + delta;
 end
-delta = [zeros((N - 1) * (B + T), 1); delta];
+
+C(1:B, 1:B) = C(1:B, 1:B) + 1/r * (J1(:, 1:B)' * J1(:, 1:B) + I(1:B, 1:B));
+
+
+

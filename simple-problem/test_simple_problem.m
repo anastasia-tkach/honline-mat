@@ -1,6 +1,6 @@
-% close all;
-% clc; clear;
-% rng default;
+close all;
+clc; clear;
+%rng default;
 
 ylimit = [-1.8, -0.2]; X = []; num_iters = 50;
 t_start = 0.01; t_end = 4.0;
@@ -21,7 +21,6 @@ uncertain = t_end - 0.2;
 %T = linspace(t_start + 0.3, t_end - 0.1, 11);
 %T = [linspace(t_end - 0.1, t_end - 0.3, 3)'; linspace(t_start + 0.4, t_start + 0.6, 4)'; linspace(t_end - 0.35, t_end - 0.15, 7)';]; % MAIN ROBLEM
 T = [uncertain * ones(4, 1); certain * ones(4, 1); uncertain * ones(7, 1);];
-%T = [uncertain * ones(10, 1); certain * ones(5, 1); uncertain * ones(10, 1); certain * ones(5, 1); uncertain * ones(10, 1); certain * ones(5, 1); uncertain * ones(30, 1)];
 
 num_data = length(T);
 Y = zeros(num_data, 1);
@@ -39,7 +38,7 @@ line_colors = {[0.3, 0.8, 1.0], [1, 0.6, 0.1]};
 point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 
 %% Optimize
-display = false;
+display = true;
 
 settings.laplace_approx = true;
 settings.last_n = false;
@@ -50,7 +49,7 @@ settings.batch = false;
 settings.independent = false;
 settings.no_lm = false;
 
-w2 = 1; w3 = 1;
+w2 = 0.5; w3 = 1;
 
 settings.batch_size = 2;
 is_independent = false;
@@ -74,8 +73,12 @@ for N = 1:num_data
             X = [X(1:N - 2); xx_opt];
             
             %% Draw covariance
-            %draw_covariance_matrix(xx_opt, inv(h)); xlim([-3, 3]); ylim([-3, 3]);
-            %mypoint([-1, -1], [1, 0.7, 0], 50);
+            if display
+                frame_certainty = T(N) < 1.5;
+                draw_covariance_matrix(xx_opt, inv(h), frame_certainty); 
+                xlim([-5, 10]); ylim([-5, 5]);
+                mypoint([-1; -1] - xx_opt, [1, 0.7, 0], 50);
+            end
                         
         end
         JtJ = J'* J;
@@ -110,7 +113,7 @@ for N = 1:num_data
         [x, ~] = my_lsqnonlin(@(x) simple_problem_fg_kalman_like(x, x_prev, y, t, JtJ, N, w2), x, num_iters);
         
         J1 = 2 * t * exp(x * t)^2;
-        JtJ = JtJ + (J1'* J1);
+        JtJ = JtJ + (J1'* J1);        
         X = [X; x];
     end
     
@@ -202,7 +205,7 @@ for N = 1:num_data
         history{N}.JtJ = zeros(N, N);
         if (N > 1), history{N}.JtJ(1:N-1, 1:N-1) = history{N - 1}.JtJ; end
         history{N}.JtJ(N, N) = JtJ;
-        history{N}.JtJ = JtJ';
+        %history{N}.JtJ = JtJ';
     end
     if (settings.batch || settings.quadratic_all)
         [F, J] = simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent);

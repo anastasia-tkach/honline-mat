@@ -26,11 +26,11 @@ if isempty(x_0)
   dQ_dx2 = 0;
   ddQ = shiftdim([0, 0; 0, 0], -1);
 else
-  A = h_(1, 1);
-  B = h_(1, 2);
-  C = h_(2, 1);
-  D = h_(2, 2);
-  ddQ_dx2_dx2 = D - C * inv(A) * B;
+  a = h_(1, 1);
+  b = h_(1, 2);
+  c = h_(2, 1);
+  d = h_(2, 2);
+  ddQ_dx2_dx2 = d - c * inv(a) * b;
   %ddQ_dx2_dx2 = D;
   ddQ_dx2_dx2_sqrt = sqrt(ddQ_dx2_dx2);
   Q = ddQ_dx2_dx2_sqrt * (xx(1) - x_0);

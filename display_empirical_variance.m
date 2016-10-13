@@ -54,7 +54,7 @@ for j = 1:N
         
         % importance  
         yyaxis right; 
-        y_position = 0;
+        y_position = 0.08;
         myline([j + offset * k, y_position], ...
             [j + offset * k, y_position + importance_means(j, k) + importance_standard_deviations(j, k)], [0.75, 0.9, 0.7], 3.2);
         myline([j + offset * k, y_position], ...
@@ -70,7 +70,8 @@ if settings.last_n == true, algorithm_name = 'last-n'; end
 if settings.kalman_like == true, algorithm_name = 'kalman-like'; end
 if settings.kalman == true, algorithm_name = 'kalman'; end
 if settings.quadratic_all == true, algorithm_name = 'quadratic-all'; end
-if settings.batch == true, algorithm_name = 'batch'; end
+if settings.batch == true && settings.independent == false, algorithm_name = 'batch'; end
+if settings.batch == true && settings.independent == true, algorithm_name = 'independent-batch'; end
 if settings.independent == true, algorithm_name = 'independent'; end
 title_string = ['\color[rgb]{0.9 0.4 0.3}', algorithm_name, '\color[rgb]{0.25 0.25 0.25}'];
 
