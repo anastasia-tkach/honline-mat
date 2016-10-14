@@ -51,6 +51,7 @@ settings.independent = false;
 w2 = 1; w3 = 1;
 
 settings.batch_independent = false;
+settings.batch_robust = true;
 settings.no_lm = false;
 settings.batch_size = 3;
 recompute_egh = true;

@@ -45,8 +45,9 @@ settings.batch = true;
 settings.no_lm = false;
 settings.independent = false;
 
-settings.batch_size = 7;
-settings.batch_independent = true;
+settings.batch_size = 2;
+settings.batch_independent = false;
+settings.batch_robust = true;
 
 w2 = 1;
 X = [];

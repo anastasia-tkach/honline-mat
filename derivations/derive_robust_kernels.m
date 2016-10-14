@@ -1,6 +1,6 @@
 clear; close all;
 
-x = -5:0.01:5;
+x = -2:0.01:2;
 
 t = 1;
 least_squares = x.^2;
@@ -10,6 +10,6 @@ figure; hold on;
 plot(x, least_squares, 'lineWidth', 2);
 %plot(x, german_mccure(0.1), 'lineWidth', 2);
 %plot(x, german_mccure(0.5), 'lineWidth', 2)
-plot(x, german_mccure(1), 'lineWidth', 2);
+plot(x, german_mccure(0.5), 'lineWidth', 2);
 %plot(x, german_mccure(2), 'lineWidth', 2);
 ylim([0, 2]);

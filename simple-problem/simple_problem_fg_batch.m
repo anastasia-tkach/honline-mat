@@ -13,14 +13,25 @@ end
 %% Closeness term
 F2 = zeros(N - 1, 1);
 J2 = zeros(N - 1, N);
-for i = max(1, N - settings.batch_size):N - 1    
+for i = max(1, N - settings.batch_size):N - 1  
+    
     if i > N - settings.batch_size 
         J2(i, i) = 1;
     end
-    if ~ settings.independent || (settings.independent && i > N - settings.batch_size)
+    
+    if ~ settings.batch_independent || (settings.batch_independent && i > N - settings.batch_size)
         F2(i) = X(i) - X(i + 1);
         J2(i, i + 1) = -1;
     end
+
+    if settings.batch_robust && i == N - settings.batch_size
+        r = X(i) - X(i + 1);
+        dr = -1;
+        [f, df] = german_mcclure_kernel(r, dr);
+        F2(i) = f;
+        J2(i, i + 1) = df;
+    end
+
 end
 
 F = [F1; sqrt(w2) * F2];

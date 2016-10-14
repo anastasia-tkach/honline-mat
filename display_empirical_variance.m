@@ -72,8 +72,9 @@ if settings.kalman == true, algorithm_name = 'kalman'; end
 if settings.quadratic_all == true, algorithm_name = 'quadratic-all'; end
 if settings.independent == true, algorithm_name = 'independent'; end
 
-if settings.batch == true && settings.batch_independent == false, algorithm_name = 'batch'; end
+if settings.batch == true && settings.batch_independent == false && settings.batch_robust == false, algorithm_name = 'batch'; end
 if settings.batch == true && settings.batch_independent == true, algorithm_name = 'independent-batch'; end
+if settings.batch == true && settings.batch_robust == true, algorithm_name = 'robust-batch'; end
 
 title_string = ['\color[rgb]{0.9 0.4 0.3}', algorithm_name, '\color[rgb]{0.25 0.25 0.25}'];
 
