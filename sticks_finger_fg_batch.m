@@ -25,7 +25,7 @@ for i = max(1, N - settings.batch_size):N - 1
     if i > N - settings.batch_size
         J2(B * (i - 1) + 1: B * i, (B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = eye(B, B);
     end
-    if ~ settings.independent || (settings.independent && i > N - settings.batch_size)
+    if ~ settings.batch_independent || (settings.batch_independent && i > N - settings.batch_size)
         F2(B * (i - 1) + 1: B * i) = beta_i - beta_j;
         J2(B * (i - 1) + 1: B * i, (B + T) * (j - 1) + 1:(B + T) * (j - 1) + B) = - eye(B, B);
     end

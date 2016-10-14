@@ -70,9 +70,11 @@ if settings.last_n == true, algorithm_name = 'last-n'; end
 if settings.kalman_like == true, algorithm_name = 'kalman-like'; end
 if settings.kalman == true, algorithm_name = 'kalman'; end
 if settings.quadratic_all == true, algorithm_name = 'quadratic-all'; end
-if settings.batch == true && settings.independent == false, algorithm_name = 'batch'; end
-if settings.batch == true && settings.independent == true, algorithm_name = 'independent-batch'; end
 if settings.independent == true, algorithm_name = 'independent'; end
+
+if settings.batch == true && settings.batch_independent == false, algorithm_name = 'batch'; end
+if settings.batch == true && settings.batch_independent == true, algorithm_name = 'independent-batch'; end
+
 title_string = ['\color[rgb]{0.9 0.4 0.3}', algorithm_name, '\color[rgb]{0.25 0.25 0.25}'];
 
 if settings.no_lm, title_string = [title_string, '     no LM']; end

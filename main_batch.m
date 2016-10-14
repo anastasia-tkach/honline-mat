@@ -43,9 +43,10 @@ settings.kalman = false;
 settings.quadratic_all = false;
 settings.batch = true;
 settings.no_lm = false;
+settings.independent = false;
 
-settings.batch_size = 3;
-settings.independent = true;
+settings.batch_size = 7;
+settings.batch_independent = true;
 
 w2 = 1;
 X = [];

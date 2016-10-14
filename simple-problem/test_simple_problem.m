@@ -1,5 +1,5 @@
-close all;
-clc; clear;
+% close all;
+% clc; clear;
 %rng default;
 
 ylimit = [-1.8, -0.2]; X = []; num_iters = 50;
@@ -38,21 +38,21 @@ line_colors = {[0.3, 0.8, 1.0], [1, 0.6, 0.1]};
 point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 
 %% Optimize
-display = true;
+display = false;
 
-settings.laplace_approx = true;
+settings.laplace_approx = false;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
 settings.quadratic_all = false;
-settings.batch = false;
+settings.batch = true;
 settings.independent = false;
+
+w2 = 1; w3 = 1;
+
+settings.batch_independent = false;
 settings.no_lm = false;
-
-w2 = 0.5; w3 = 1;
-
-settings.batch_size = 2;
-is_independent = false;
+settings.batch_size = 3;
 recompute_egh = true;
 
 X = [];
@@ -61,7 +61,7 @@ for N = 1:num_data
     if (settings.laplace_approx)
         if N < 3
             X0 = x_init * ones(N, 1);
-            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent), X0, num_iters);            
+            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings, w2), X0, num_iters);            
         else
             X_prev = [X; x_init];
             X0 = [X(1:N - 2); x_init * ones(2, 1)];
@@ -163,7 +163,7 @@ for N = 1:num_data
         %options = optimoptions(@lsqnonlin, 'Algorithm', 'levenberg-marquardt', 'Jacobian','on', 'OptimalityTolerance', 1e-10);
         %X = lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, w2), X0, [], [], options);
         
-        [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent), X0, num_iters);
+        [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings, w2), X0, num_iters);
     end
     
     %% Kalman
@@ -208,7 +208,7 @@ for N = 1:num_data
         %history{N}.JtJ = JtJ';
     end
     if (settings.batch || settings.quadratic_all)
-        [F, J] = simple_problem_fg_batch(X, Y, T, N, settings.batch_size, w2, is_independent);
+        [F, J] = simple_problem_fg_batch(X, Y, T, N, settings, w2);
         %J1 = J(1:N, :); history{N}.JtJ = J1' * J1;
         J1 = J(1:N, :); history{N}.JtJ = J' * J;
     end
