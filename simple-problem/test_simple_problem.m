@@ -1,6 +1,6 @@
 % close all;
 % clc; clear;
-%rng default;
+rng default;
 
 ylimit = [-1.8, -0.2]; X = []; num_iters = 50;
 t_start = 0.01; t_end = 4.0;
@@ -40,12 +40,12 @@ point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 %% Optimize
 display = false;
 
-settings.laplace_approx = false;
+settings.laplace_approx = true;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
 settings.quadratic_all = false;
-settings.batch = true;
+settings.batch = false;
 settings.independent = false;
 
 w2 = 1; w3 = 1;
