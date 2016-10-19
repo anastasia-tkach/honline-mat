@@ -1,6 +1,6 @@
-% close all;
+close all;
 % clc; clear;
-rng default;
+% rng default;
 
 ylimit = [-1.8, -0.2]; X = []; num_iters = 50;
 t_start = 0.01; t_end = 4.0;
