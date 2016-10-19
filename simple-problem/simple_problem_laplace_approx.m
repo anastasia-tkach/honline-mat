@@ -18,5 +18,5 @@ xx0 = X0(N-1:N);
 [F, J, h] = simple_problem_fg_laplace_approx(xx_opt, x_0, y, t, h_, w2);
 
 %% Display
-display_posterior_and_laplace_approx(xx_opt, F, J, h, x_0, y, t, h_, w2);
+% display_posterior_and_laplace_approx(xx_opt, F, J, h, x_0, y, t, h_, w2);
 

@@ -31,7 +31,7 @@ else
   c = h_(2, 1);
   d = h_(2, 2);
   ddQ_dx2_dx2 = d - c * inv(a) * b;
-  %ddQ_dx2_dx2 = D;
+  %ddQ_dx2_dx2 = d;
   ddQ_dx2_dx2_sqrt = sqrt(ddQ_dx2_dx2);
   Q = ddQ_dx2_dx2_sqrt * (xx(1) - x_0);
   dQ_dx1 = ddQ_dx2_dx2_sqrt;
@@ -47,4 +47,8 @@ H = [ddQ; ddF1; ddF2];
 f = F' * F;  
 j = 2 * F' * J;  
 h = hessian_for_scalar_objective(F, J, H);
+
+
+
+
 

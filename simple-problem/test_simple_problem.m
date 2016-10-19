@@ -1,4 +1,4 @@
-close all;
+% close all;
 % clc; clear;
 % rng default;
 
@@ -18,8 +18,6 @@ j_ = @(x, t) 2 * t * exp(x * t)^2;
 %% Generate data
 certain = t_start + 0.5;
 uncertain = t_end - 0.2;
-%T = linspace(t_start + 0.3, t_end - 0.1, 11);
-%T = [linspace(t_end - 0.1, t_end - 0.3, 3)'; linspace(t_start + 0.4, t_start + 0.6, 4)'; linspace(t_end - 0.35, t_end - 0.15, 7)';]; % MAIN ROBLEM
 T = [uncertain * ones(4, 1); certain * ones(4, 1); uncertain * ones(7, 1);];
 
 num_data = length(T);
@@ -40,7 +38,8 @@ point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 %% Optimize
 display = false;
 
-settings.laplace_approx = true;
+settings.quadratic_one = true;
+settings.laplace_approx = false;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
@@ -51,13 +50,35 @@ settings.independent = false;
 w2 = 1; w3 = 1;
 
 settings.batch_independent = false;
-settings.batch_robust = true;
-settings.no_lm = false;
+settings.batch_robust = false;
+settings.quadratic_one_marginalization = false;
+
 settings.batch_size = 3;
-recompute_egh = true;
+settings.num_iters = num_iters;
+settings.no_lm = false;
+
 
 X = [];
 for N = 1:num_data
+    
+    %% Quadratic one
+    if (settings.quadratic_one)
+        if N < 3
+            X0 = x_init * ones(N, 1);
+            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings, w2), X0, num_iters);            
+        else
+            X_prev = [X; x_init];
+            X0 = [X(1:N - 2); x_init * ones(2, 1)];
+            if N == 3, h = zeros(3, 2, 2); end
+            [xx_opt, J, h] = simple_problem_quadratic_one(X0, X_prev, h, Y, T, N, w2, settings);            
+            J = sqrtm(h); 
+            
+            X = [X(1:N - 2); xx_opt];          
+                        
+        end
+        JtJ = J'* J;
+    end
+    
     %% Quadratic two
     if (settings.laplace_approx)
         if N < 3
@@ -66,21 +87,21 @@ for N = 1:num_data
         else
             X_prev = [X; x_init];
             X0 = [X(1:N - 2); x_init * ones(2, 1)];
-            %[xx_opt, J] = simple_problem_quadratic_two(X0, Y, T, N, w2);
             if N == 3, h = zeros(3, 2, 2); end
             [xx_opt, J, h] = simple_problem_laplace_approx(X0, X_prev, h, Y, T, N, w2, num_iters);            
-            J = sqrtm(h); %disp([J' * J, h]);
+            J = sqrtm(h); 
             
             X = [X(1:N - 2); xx_opt];
             
             %% Draw covariance
+            %{
             if display
                 frame_certainty = T(N) < 1.5;
                 draw_covariance_matrix(xx_opt, inv(h), frame_certainty); 
                 xlim([-5, 10]); ylim([-5, 5]);
                 mypoint([-1; -1] - xx_opt, [1, 0.7, 0], 50);
             end
-                        
+            %}        
         end
         JtJ = J'* J;
     end
@@ -193,7 +214,7 @@ for N = 1:num_data
     
     %% Record history
     history{N}.X = X;
-    if (settings.laplace_approx)
+    if (settings.laplace_approx || settings.quadratic_one)
         if N < 3
             history{N}.JtJ = JtJ;
         else

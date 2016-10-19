@@ -34,8 +34,8 @@ else
     B = h_(1, 2);
     C = h_(2, 1);
     D = h_(2, 2);
-    %ddQ_dx2_dx2 = D - C * inv(A) * B;
-    ddQ_dx2_dx2 = D;
+    ddQ_dx2_dx2 = D - C * inv(A) * B;
+    %ddQ_dx2_dx2 = D;
     ddQ_dx2_dx2_sqrt = sqrt(ddQ_dx2_dx2);
     Q = @(xx) ddQ_dx2_dx2_sqrt * (xx(1) - x_0);
     dQ_dx1 = @(xx) ddQ_dx2_dx2_sqrt;
@@ -48,8 +48,8 @@ J = @(xx) [dQ_dx1(xx), dQ_dx2(xx); dF1_dx1(xx), dF1_dx2(xx); dF2_dx1(xx), dF2_dx
 H = @(xx) [ddQ(xx); ddF1(xx); ddF2(xx)];
 
 %% Hessian for scalar objective
-f = @(xx) F(xx)' * F(xx);    
-j = @(xx) 2 * F(xx)' * J(xx);    
+f = @(xx) F(xx)' * F(xx);
+j = @(xx) 2 * F(xx)' * J(xx);
 h = @(xx) hessian_for_scalar_objective(F(xx), J(xx), H(xx));
 
 %v = my_gradient(f, xx);
@@ -57,6 +57,16 @@ h = @(xx) hessian_for_scalar_objective(F(xx), J(xx), H(xx));
 %vv = my_gradient(j, xx);
 %disp([vv, h(xx)]);
 
+%% Optimize x1
+
+
+x2 = xx(2);
+
+Fo = @(x1)  [ddQ_dx2_dx2_sqrt * (x1 - x_0); exp(x2 * t)^2 - y; sqrt(w2) * (x2 - x1); ];
+x1 = xx(1);
+[x1_opt] = lsqnonlin(Fo, x1);
+
+%% Compute the values
 F = F(xx);
 J = J(xx);
 H = H(xx);
@@ -64,3 +74,8 @@ H = H(xx);
 f = f(xx);
 j = j(xx);
 h = h(xx);
+
+
+
+
+
