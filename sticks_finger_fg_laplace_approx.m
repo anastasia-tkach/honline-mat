@@ -43,8 +43,8 @@ else
     
     ddQ_dx2_dx2 = d - c * inv(a) * b;
     
-    %ddQ_dx2_dx2 = d - 4 * w2 * w2 * inv(a);    
-   
+    %ddQ_dx2_dx2 = d - 4 * w2 * w2 * inv(a);
+    
     %ddQ_dx2_dx2 = d;
     ddQ_dx2_dx2_sqrt = real(sqrtm(ddQ_dx2_dx2));
     
@@ -67,13 +67,22 @@ j = 2 * F' * J;
 h = 2 * J' * J;
 
 % h = 2 * (dQ(:, [1:B, M + 1:M + B])' * dQ(:, [1:B, M + 1:M + B]) + dF1(:, [1:B, M + 1:M + B])' * dF1(:, [1:B, M + 1:M + B]) + dF2(:, [1:B, M + 1:M + B])' * dF2(:, [1:B, M + 1:M + B]));
-% 
+%
 % a = 2 * dQ(:, 1:B)' * dQ(:, 1:B)' + 2 * w2 * eye(B, B);
 % d = 2 * dF1(:, M + 1:M + B)' *  dF1(:, M + 1:M + B) + 2 * w2 * eye(B, B);
 % b = -2 * w2 * eye(B, B);
 % c = -2 * w2 * eye(B, B);
 % h = [a, b; c, d];
 
-
-
+%% Compare with quadratic-one
+%{
+if ~isempty(x_0)
+    x2 = xx(B + T + 1:2 * (B + T));
+    
+    Fo = @(x1)  [ddQ_dx2_dx2_sqrt * (x1(1:B) - x_0(1:B)); F1; sqrt(w2) * (x2(1:B) - x1(1:B));];
+    x1 = xx(1:B + T);
+    [x1_opt] = lsqnonlin(Fo, x1);
+    disp(Fo(x1_opt)' * Fo(x1_opt));
+end
+%}
 

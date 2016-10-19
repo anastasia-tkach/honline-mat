@@ -1,5 +1,5 @@
 %clear; clc;
-%rng default;
+% rng default;
 
 %% Parameters
 num_samples = 10;
@@ -36,18 +36,23 @@ if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 
     axis off; axis equal; hold on;
 end
 
+settings.quadratic_one = true;
 settings.laplace_approx = false;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
 settings.quadratic_all = false;
-settings.batch = true;
+settings.batch = false;
 settings.no_lm = false;
 settings.independent = false;
 
 settings.batch_size = 2;
+settings.num_iters = num_iters;
+
 settings.batch_independent = false;
-settings.batch_robust = true;
+settings.batch_robust = false;
+settings.quadratic_one_marginalization = false;
+
 
 w2 = 1;
 X = [];
@@ -55,6 +60,21 @@ X = [];
 %% Tracking
 for N = 1:num_frames
     %disp(N);
+    
+    %% Quadratic-one
+    if (settings.quadratic_one)
+        if N < 3
+            X = X_init(1:(B + T) * N);
+            [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings, w2), X, num_iters);
+            h = zeros(3, 2, 2);
+        else
+            X_prev = [X; X_init((B + T) * (N - 1) + 1:(B + T) * N)];
+            X0 = [X(1:(B + T) * (N - 2)); X_init((B + T) * (N - 2) + 1:(B + T) * N)];            
+            [xx_opt, J, h] = sticks_finger_quadratic_one(X0, X_prev, h, segments0, joints, frames, N, w2, settings);
+            J = sqrtm(h);            
+            X = [X(1:(B + T) * (N - 2)); xx_opt];
+        end
+    end
     
     %% Laplace approximation
     if (settings.laplace_approx)
@@ -99,7 +119,7 @@ for N = 1:num_frames
         if (N == 1)
             x = X_init((B + T) * (N - 1) + 1:(B + T) * N);
             C = zeros(B + T, B + T);
-        else            
+        else
             x = X_init((B + T) * (N - 1) + 1:(B + T) * N);
             x(1:B) = X((B + T) * (N - 2) + 1:(B + T) * (N - 2) + B);
         end
@@ -157,7 +177,7 @@ for N = 1:num_frames
     
     %% Save history
     history{N}.X = X;
-    if settings.batch || settings.independent || (settings.laplace_approx && N < 3)
+    if settings.batch || settings.independent || (N < 3 && (settings.laplace_approx || settings.quadratic_one))
         history{N}.JtJ = zeros((B + T) * N, (B + T) * N);
         if N > 1
             history{N}.JtJ(1:(B + T) * max(1, N - settings.batch_size), 1:(B + T) * max(1, N - settings.batch_size)) = ...
@@ -167,7 +187,7 @@ for N = 1:num_frames
         history{N}.JtJ((B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N, (B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N) = ...
             JtJ((B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N, (B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N);
     end
-    if N >= 3 && settings.laplace_approx
+    if N >= 3 && (settings.laplace_approx || settings.quadratic_one)
         history{N}.JtJ = zeros((B + T) * N, (B + T) * N);
         history{N}.JtJ(1:(B + T) * (N - 2), 1:(B + T) * (N - 2)) = history{N - 1}.JtJ(1:(B + T) * (N - 2), 1:(B + T) * (N - 2));
         history{N}.JtJ((B + T) * (N - 2) + 1:(B + T) * N, (B + T) * (N - 2) + 1:(B + T) * N) = J' * J;

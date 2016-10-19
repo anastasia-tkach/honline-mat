@@ -94,14 +94,12 @@ for N = 1:num_data
             X = [X(1:N - 2); xx_opt];
             
             %% Draw covariance
-            %{
             if display
                 frame_certainty = T(N) < 1.5;
                 draw_covariance_matrix(xx_opt, inv(h), frame_certainty); 
                 xlim([-5, 10]); ylim([-5, 5]);
                 mypoint([-1; -1] - xx_opt, [1, 0.7, 0], 50);
-            end
-            %}        
+            end     
         end
         JtJ = J'* J;
     end
