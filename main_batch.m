@@ -36,8 +36,8 @@ if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 
     axis off; axis equal; hold on;
 end
 
-settings.quadratic_one = true;
-settings.laplace_approx = false;
+settings.quadratic_one = false;
+settings.laplace_approx = true;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
@@ -51,8 +51,6 @@ settings.num_iters = num_iters;
 
 settings.batch_independent = false;
 settings.batch_robust = false;
-settings.quadratic_one_marginalization = true;
-
 
 w2 = 1;
 X = [];
@@ -72,13 +70,6 @@ for N = 1:num_frames
             X0 = [X(1:(B + T) * (N - 2)); X_init((B + T) * (N - 2) + 1:(B + T) * N)];
             [xx_opt, J, h] = sticks_finger_quadratic_one(X0, X_prev, h, segments0, joints, frames, N, w2, settings);
             H = h;
-            if settings.quadratic_one_marginalization
-                a = h(1:B, 1:B);
-                b = h(1:B, B + T + 1:B + T + B);
-                c = h(B + T + 1:B + T + B, 1:B);
-                d = h(B + T + 1:B + T + B, B + T + 1:B + T + B);
-                H(B + T + 1:B + T + B, B + T + 1:B + T + B) = d - c * inv(a) * b;
-            end
             H(1:B + T, 1:B + T) = history{N - 1}.JtJ((B + T) * (N - 2) + 1:(B + T) * (N - 1), (B + T) * (N - 2) + 1:(B + T) * (N - 1));
             X = [X(1:(B + T) * (N - 2)); xx_opt];
         end

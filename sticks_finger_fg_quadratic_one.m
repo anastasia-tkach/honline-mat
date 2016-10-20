@@ -1,18 +1,10 @@
-function [F, J, h] = sticks_finger_fg_quadratic_one(x2, x0, segments0, joints, data_points, h_, w2, settings)
+function [F, J, h] = sticks_finger_fg_quadratic_one(x2, x0, segments0, joints, data_points, h_, w2)
 
 B = 3;  T = 3;
 
 %% Recursive term
 if ~isempty(h_)
-    a = h_(1:B, 1:B);
-    b = h_(1:B, B + T + 1:B + T + B);
-    c = h_(B + T + 1:B + T + B, 1:B);
-    d = h_(B + T + 1:B + T + B, B + T + 1:B + T + B);
-    if settings.quadratic_one_marginalization
-        W3 = d - c * inv(a) * b;
-    else
-        W3 = d;
-    end
+    W3 = h_(B + T + 1:B + T + B, B + T + 1:B + T + B);;
 else
     W3 = zeros(B, B);
 end

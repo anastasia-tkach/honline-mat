@@ -1,17 +1,8 @@
-function [F, J, h] = simple_problem_fg_quadratic_one(x2, x0, y, t, h_, w2, settings)
+function [F, J, h] = simple_problem_fg_quadratic_one(x2, x0, y, t, h_, w2)
 
 %% Eliminating x_previous
 if ~isempty(h_)
-    A = h_(1, 1);
-    B = h_(1, 2);
-    C = h_(2, 1);
-    D = h_(2, 2);
-    
-    if settings.quadratic_one_marginalization
-        W3 = D - C * inv(A) * B;
-    else
-        W3 = D;
-    end
+    W3 = h_(2, 2);
 else
     W3 = 0;
 end

@@ -76,7 +76,6 @@ if settings.independent == true, algorithm_name = 'independent'; end
 if settings.batch == true && settings.batch_independent == false && settings.batch_robust == false, algorithm_name = 'batch'; end
 if settings.batch == true && settings.batch_independent == true, algorithm_name = 'independent-batch'; end
 if settings.batch == true && settings.batch_robust == true, algorithm_name = 'robust-batch'; end
-if settings.quadratic_one == true && settings.quadratic_one_marginalization == true, algorithm_name = 'quadratic-one-marginalization'; end
 
 title_string = ['\color[rgb]{0.9 0.4 0.3}', algorithm_name, '\color[rgb]{0.25 0.25 0.25}'];
 

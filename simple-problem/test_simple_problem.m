@@ -38,8 +38,8 @@ point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 %% Optimize
 display = false;
 
-settings.quadratic_one = false;
-settings.laplace_approx = true;
+settings.quadratic_one = true;
+settings.laplace_approx = false;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
@@ -51,7 +51,6 @@ w2 = 1; w3 = 1;
 
 settings.batch_independent = false;
 settings.batch_robust = false;
-settings.quadratic_one_marginalization = false;
 
 settings.batch_size = 3;
 settings.num_iters = num_iters;
@@ -73,10 +72,6 @@ for N = 1:num_data
             if N == 3, h = zeros(3, 2, 2); end
             [xx_opt, J, h] = simple_problem_quadratic_one(X0, X_prev, h, Y, T, N, w2, settings);            
             H = h;
-            if settings.quadratic_one_marginalization
-                a = h(1, 1); b = h(1, 2); c = h(2, 1); d = h(2, 2);
-                H(2, 2) = d - c * inv(a) * b;
-            end
             H(1, 1) = history{N - 1}.JtJ(N - 1, N - 1); 
             
             X = [X(1:N - 2); xx_opt];          
