@@ -27,12 +27,12 @@ I = eye(1, 1);
 F1 = exp(x2 * t)^2 - y;
 dF1_dx2 = 2 * t * exp(x2 * t)^2;
 
-F2 = sqrt(W2) * (x2 - M * x2 - m);
-dF2_dx2 = sqrt(W2) * (I - M);
+F2 = sqrtm(W2) * (x2 - M * x2 - m);
+dF2_dx2 = sqrtm(W2) * (I - M);
 
 if ~isempty(h_)
-    F3 = sqrt(W3) * (M * x2 + m - x0);
-    dF3_dx2 = sqrt(W3) * M;
+    F3 = sqrtm(W3) * (M * x2 + m - x0);
+    dF3_dx2 = sqrtm(W3) * M;
 else
     F3 = 0;
     dF3_dx2 = 0;

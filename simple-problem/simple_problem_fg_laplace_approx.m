@@ -46,7 +46,8 @@ H = [ddQ; ddF1; ddF2];
 %% Hessian for scalar objective
 f = F' * F;  
 j = 2 * F' * J;  
-h = hessian_for_scalar_objective(F, J, H);
+h = 2 * J' * J;
+%h = hessian_for_scalar_objective(F, J, H);
 
 
 

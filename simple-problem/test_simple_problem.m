@@ -38,8 +38,8 @@ point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 %% Optimize
 display = false;
 
-settings.quadratic_one = true;
-settings.laplace_approx = false;
+settings.quadratic_one = false;
+settings.laplace_approx = true;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
@@ -65,34 +65,44 @@ for N = 1:num_data
     if (settings.quadratic_one)
         if N < 3
             X0 = x_init * ones(N, 1);
-            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings, w2), X0, num_iters);            
+            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings, w2), X0, num_iters);   
+            JtJ = J' * J;
         else
             X_prev = [X; x_init];
             X0 = [X(1:N - 2); x_init * ones(2, 1)];
             if N == 3, h = zeros(3, 2, 2); end
             [xx_opt, J, h] = simple_problem_quadratic_one(X0, X_prev, h, Y, T, N, w2, settings);            
-            J = sqrtm(h); 
+            H = h;
+            if settings.quadratic_one_marginalization
+                a = h(1, 1); b = h(1, 2); c = h(2, 1); d = h(2, 2);
+                H(2, 2) = d - c * inv(a) * b;
+            end
+            H(1, 1) = history{N - 1}.JtJ(N - 1, N - 1); 
             
             X = [X(1:N - 2); xx_opt];          
-                        
+            JtJ = H;            
         end
-        JtJ = J'* J;
+        
     end
     
     %% Quadratic two
     if (settings.laplace_approx)
         if N < 3
             X0 = x_init * ones(N, 1);
-            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings, w2), X0, num_iters);            
+            [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings, w2), X0, num_iters);  
+            JtJ = J'* J;
         else
             X_prev = [X; x_init];
             X0 = [X(1:N - 2); x_init * ones(2, 1)];
             if N == 3, h = zeros(3, 2, 2); end
             [xx_opt, J, h] = simple_problem_laplace_approx(X0, X_prev, h, Y, T, N, w2, num_iters);            
-            J = sqrtm(h); 
+          
+            a = h(1, 1); b = h(1, 2); c = h(2, 1); d = h(2, 2);
+            H(2, 2) = d - c * inv(a) * b;
+            H(1, 1) = history{N - 1}.JtJ(N - 1, N - 1); 
             
             X = [X(1:N - 2); xx_opt];
-            
+            JtJ = H;
             %% Draw covariance
             if display
                 frame_certainty = T(N) < 1.5;
@@ -101,7 +111,7 @@ for N = 1:num_data
                 mypoint([-1; -1] - xx_opt, [1, 0.7, 0], 50);
             end     
         end
-        JtJ = J'* J;
+        
     end
     
     %% Last n
