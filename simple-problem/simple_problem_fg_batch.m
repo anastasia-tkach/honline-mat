@@ -19,12 +19,12 @@ for i = max(1, N - settings.batch_size):N - 1
         J2(i, i) = 1;
     end
     
-    if ~ settings.batch_independent || (settings.batch_independent && i > N - settings.batch_size)
+    if settings.batch_online || settings.batch_online_robust || (settings.batch_independent && i > N - settings.batch_size)
         F2(i) = X(i) - X(i + 1);
         J2(i, i + 1) = -1;
     end
 
-    if settings.batch_robust && i == N - settings.batch_size
+    if settings.batch_online_robust && i == N - settings.batch_size
         r = X(i) - X(i + 1);
         dr = -1;
         [f, df] = german_mcclure_kernel(r, dr);

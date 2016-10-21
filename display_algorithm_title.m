@@ -8,9 +8,9 @@ if settings.kalman_like == true, algorithm_name = 'kalman-like'; end
 if settings.kalman == true, algorithm_name = 'kalman'; end
 if settings.independent == true, algorithm_name = 'independent'; end
 
-if settings.batch == true && settings.batch_independent == false && settings.batch_robust == false, algorithm_name = 'batch'; end
-if settings.batch == true && settings.batch_independent == true, algorithm_name = 'independent-batch'; end
-if settings.batch == true && settings.batch_robust == true, algorithm_name = 'robust-batch'; end
+if settings.batch == true && settings.batch_online == true, algorithm_name = 'batch-online'; end
+if settings.batch == true && settings.batch_independent == true, algorithm_name = 'batch-independent'; end
+if settings.batch == true && settings.batch_online_robust == true, algorithm_name = 'batch-online-robust'; end
 
 title_string = ['\color[rgb]{0.9 0.4 0.3}', algorithm_name, '\color[rgb]{0.25 0.25 0.25}'];
 

@@ -36,17 +36,18 @@ if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 
 end
 
 settings.quadratic_one = false;
-settings.quadratic_two = true;
+settings.quadratic_two = false;
 settings.kalman_like = false;
 settings.kalman = false;
-settings.batch = false;
+settings.batch = true;
 settings.independent = false;
 
 settings.batch_size = 2;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
-settings.batch_robust = false;
+settings.batch_online = true;
+settings.batch_online_robust = false;
 
 w2 = 1;
 X = [];
@@ -145,11 +146,23 @@ for N = 1:num_frames
     if (settings.batch)        
         if N <= settings.batch_size
             X = X_init(1:(B + T) * N);
+            
+            x = X;
+            x0 = [];
         else
             X = [X(1:(B + T) * (N - settings.batch_size)); X_init((B + T) * (N - settings.batch_size) + 1:(B + T) * N)];
+            
+            x = X((B + T) * (N - settings.batch_size) + 1:(B + T) * N);
+            x0 = X((B + T) * (N - settings.batch_size - 1) + 1:(B + T) * N - settings.batch_size);            
         end        
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, segments0, joints, frames, N, D, settings, w2), X, settings.num_iters);
-        
+
+        [x, J] = my_lsqnonlin(@(x) sticks_finger_fg_batch(x, x0, segments0, joints, frames, N, D, settings, w2), x, settings.num_iters);
+           
+        if N <= settings.batch_size
+            X = x;
+        else        
+            X = [X(1:(B + T) * (N - settings.batch_size)); x];
+        end            
     end
     %% Display
     if (to_display)
@@ -174,8 +187,7 @@ for N = 1:num_frames
                 history{N - 1}.JtJ(1:(B + T) * max(1, N - settings.batch_size), 1:(B + T) * max(1, N - settings.batch_size));
         end
         JtJ = J' * J;
-        history{N}.JtJ((B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N, (B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N) = ...
-            JtJ((B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N, (B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N);
+        history{N}.JtJ((B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N, (B + T) * max(0, N - settings.batch_size) + 1:(B + T) * N) = JtJ;
     end
     if N >= 3 && (settings.quadratic_two || settings.quadratic_one)
         history{N}.JtJ = zeros((B + T) * N, (B + T) * N);

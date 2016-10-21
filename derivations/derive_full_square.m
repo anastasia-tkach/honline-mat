@@ -12,12 +12,12 @@ f = (A * x + b)' * (A * x + b) + (C * x + d)' * (C * x + d);
 
 f1 = x' * (A' * A + C' * C) * x + 2 * x' * (A * b + C * d) + b' * b + d' * d;
 
-M = sqrtm(A' * A + C' * C);
-m = inv(sqrtm(A' * A + C' * C)) * (A * b + C * d);
+L = sqrtm(A' * A + C' * C);
+l = inv(sqrtm(A' * A + C' * C)) * (A * b + C * d);
 
-f2 = x' * M' * M * x + 2 * x' * M * m + m' * m - m' * m + b' * b + d' * d;
+f2 = x' * L' * L * x + 2 * x' * L * l + l' * l - l' * l + b' * b + d' * d;
 
-k = b' * b + d' * d - m' * m;
-f3 = (M * x + m)' * (M * x + m) +  k;
+k = b' * b + d' * d - l' * l;
+f3 = (L * x + l)' * (L * x + l) +  k;
 
-disp([f; f3]);
+disp([f; f3]); % f is identical to f3

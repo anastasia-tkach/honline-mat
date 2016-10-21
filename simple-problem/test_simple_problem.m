@@ -38,21 +38,22 @@ point_colors = {[0.7, 0.1, 0.6], [1, 0.4, 0.1]};
 %% Optimize
 display = false;
 
-settings.quadratic_one = true;
-settings.laplace_approx = false;
+settings.quadratic_one = false;
+settings.quadratic_two = true;
 settings.last_n = false;
 settings.kalman_like = false;
 settings.kalman = false;
 settings.quadratic_all = false;
-settings.batch = false;
+settings.batch = true;
 settings.independent = false;
 
 w2 = 1; w3 = 1;
 
-settings.batch_independent = false;
-settings.batch_robust = false;
+settings.batch_independent = true;
+settings.batch_online = false;
+settings.batch_online_robust = false;
 
-settings.batch_size = 3;
+settings.batch_size = 2;
 settings.num_iters = num_iters;
 settings.no_lm = false;
 
@@ -81,7 +82,7 @@ for N = 1:num_data
     end
     
     %% Quadratic two
-    if (settings.laplace_approx)
+    if (settings.quadratic_two)
         if N < 3
             X0 = x_init * ones(N, 1);
             [X, J] = my_lsqnonlin(@(X) simple_problem_fg_batch(X, Y, T, N, settings, w2), X0, num_iters);  
@@ -217,7 +218,7 @@ for N = 1:num_data
     
     %% Record history
     history{N}.X = X;
-    if (settings.laplace_approx || settings.quadratic_one)
+    if (settings.quadratic_two || settings.quadratic_one)
         if N < 3
             history{N}.JtJ = JtJ;
         else
