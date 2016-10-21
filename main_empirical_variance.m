@@ -29,10 +29,13 @@ for i = 1:N
     end
 end
 
-
-%% Display empirical variance
-
+%% Set display parameters
 ylimit = [1.5, 4.5];
 frame_centrainty = (thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4);
 
+%% Display empirical variance
 display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, N, w2, frame_centrainty, 'sticks_finger');
+
+%% Display history
+%display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, N, w2, frame_centrainty, 'sticks_finger');
+
