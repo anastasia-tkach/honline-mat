@@ -5,7 +5,7 @@ Histories = cell(num_runs, 1);
 for run_index = 1:num_runs
     disp(run_index);
     main_batch;
-    Histories{run_index} = hist;
+    Histories{run_index} = history;
 end
 
 beta_index = 2;

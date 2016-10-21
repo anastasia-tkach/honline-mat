@@ -45,13 +45,13 @@ settings.batch_size = 2;%settings.num_frames;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
-settings.batch_online = true;
-settings.batch_online_robust = false;
+settings.batch_online = false;
+settings.batch_online_robust = true;
 
 [settings, history] = set_batch_size(settings);
 
 w2 = 1;
-X = []; h = [];
+h = [];
 
 %% Tracking
 for N = 1:settings.num_frames
@@ -59,56 +59,53 @@ for N = 1:settings.num_frames
     
     %% Quadratic-one
     if (settings.quadratic_one && N >= 3)
-        X_prev = [X; X_init((B + T) * (N - 1) + 1:(B + T) * N)];
-        X0 = [X(1:(B + T) * (N - 2)); X_init((B + T) * (N - 2) + 1:(B + T) * N)];
-        [xx_opt, J, h] = sticks_finger_quadratic_one(X0, X_prev, h, segments0, joints, frames, N, w2, settings);
+        
+        X = X_init((B + T) * (N - 2) + 1:(B + T) * N);        
+        x_1 = history.x_batch(N - 1, 1:B + T)';
+        x0 = history.x_batch(N - 1, (B + T) + 1:end)';
+        
+        [X, J, h] = sticks_finger_quadratic_one(X, x0, x_1, h, segments0, joints, frames, N, w2, settings);
+        
         H = h;       
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
-        X = [X(1:(B + T) * (N - 2)); xx_opt];
     end
     
     %% Laplace approximation
     if (settings.quadratic_two && N >= 3)
-        X_prev = [X; X_init((B + T) * (N - 1) + 1:(B + T) * N)];
-        X0 = [X(1:(B + T) * (N - 2)); X_init((B + T) * (N - 2) + 1:(B + T) * N)];
+        X = X_init((B + T) * (N - 2) + 1:(B + T) * N);
         
-        [xx_opt, J, h] = sticks_finger_laplace_approx(X0, X_prev, h, segments0, joints, frames, N, w2, settings.num_iters);
+        x_1 = history.x_batch(N - 1, 1:B + T)';
+        x0 = history.x_batch(N - 1, (B + T) + 1:end)';
+        [X, J, h] = sticks_finger_laplace_approx(X, x0, x_1, h, segments0, joints, frames, N, w2, settings.num_iters);
         
         H = zeros(2 * (B + T), 2 * (B + T));
         a = h(1:B, 1:B); b = h(1:B, B + T + 1:B + T + B); c = h(B + T + 1:B + T + B, 1:B); d = h(B + T + 1:B + T + B, B + T + 1:B + T + B);
         H(B + T + 1:B + T + B, B + T + 1:B + T + B) = d - c * inv(a) * b;
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
-        
-        X = [X(1:(B + T) * (N - 2)); xx_opt];
     end
     
     %% Kalman-like
     if (settings.kalman_like)
-        x = X_init((B + T) * (N - 1) + 1:(B + T) * N);
+        X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
         if (N == 1)
-            x_prev = [];
+            x0 = [];
             JtJ = zeros(B, B);
         else
-            x_prev = X((B + T) * (N - 2) + 1:(B + T) * (N - 1));
+            x0 = history.x_batch(N - 1, :)';
         end
         
-        [x, J] = my_lsqnonlin(@(x) sticks_finger_fg_kalman_like(x, x_prev, segments0, joints, frames{N}, JtJ, N, w2), x, settings.num_iters);
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_like(X, x0, segments0, joints, frames{N}, JtJ, N, w2), X, settings.num_iters);
         
         J1 = J(1:D, 1:B);
         JtJ = JtJ + (J1'* J1);
-        X = [X; x];
         H = [JtJ, zeros(B, B); zeros(B, B), zeros(B, B)];
     end
     
     %% Separate optimization
     if (settings.independent)
-        X = zeros(N * (B + T), 1);
-        J = zeros(N * (B + T), N * (B + T));
         for i = 1:N
-            x = X_init((B + T) * (i - 1) + 1:(B + T) * i);
-            [x, j] = my_lsqnonlin(@(x) sticks_finger_fg_data(x, segments0, joints, frames{i}), x, settings.num_iters);
-            X((B + T) * (i - 1) + 1:(B + T) * i) = x;
-            J(D * (i - 1) + 1:D * i, (B + T) * (i - 1) + 1:(B + T) * i) = j;
+            X = X_init((B + T) * (i - 1) + 1:(B + T) * i);
+            [X, j] = my_lsqnonlin(@(X) sticks_finger_fg_data(x, segments0, joints, frames{i}), X, settings.num_iters);
         end
         H = j' * j;
     end
@@ -117,23 +114,14 @@ for N = 1:settings.num_frames
     if (settings.batch || (N < 3 && (settings.quadratic_two || settings.quadratic_one)))
         if N <= settings.batch_size
             X = X_init(1:(B + T) * N);
-            x = X;
             x0 = [];
         else
-            X = [X(1:(B + T) * (N - settings.batch_size)); X_init((B + T) * (N - settings.batch_size) + 1:(B + T) * N)];
-            x = X((B + T) * (N - settings.batch_size) + 1:(B + T) * N);
-            x0 = X((B + T) * (N - settings.batch_size - 1) + 1:(B + T) * N - settings.batch_size);
+            X = X_init((B + T) * (N - settings.batch_size) + 1:(B + T) * N);
+            x0 = history.x_batch(N - 1, 1:B + T)';
         end
         
-        [x, J] = my_lsqnonlin(@(x) sticks_finger_fg_batch(x, x0, segments0, joints, frames, N, D, settings, w2), x, settings.num_iters);
-        
-        if N <= settings.batch_size
-            X = x;
-        else
-            X = [X(1:(B + T) * (N - settings.batch_size)); x];
-        end
-        H = J' * J;
-        
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, D, settings, w2), X, settings.num_iters);
+        H = J' * J;        
     end
     
     %% Save new historyory
@@ -141,15 +129,15 @@ for N = 1:settings.num_frames
         history.x_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); X];
         history.h_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); diag(H)];
     else
-        indices = (B + T) * (N - settings.batch_size) + 1:(B + T) * N;
-        history.x_batch(N, :) = X(indices);%replace
-        history.h_batch(N, :) = diag(H);%replace
+        indices = 1:(B + T) *  settings.batch_size;
+        history.x_batch(N, :) = X(indices);
+        history.h_batch(N, :) = diag(H);
     end
     
     %% Display
     if (to_display)
-        betas_N = X((B + T) * (N - 1) + 1:(B + T) * (N - 1) + B);
-        thetas_N = X((B + T) * (N - 1) + B + 1:(B + T) * N);
+        betas_N = X(end - (B + T) + 1:end - T);
+        thetas_N = X(end - T + 1:end);
         data_points = frames{N};
         [segments0, joints] = segments_and_joints_2D();
         [segments0] = shape_2D(segments0, betas_N);
