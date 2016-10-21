@@ -5,7 +5,6 @@ algorithm_name = '';
 if settings.quadratic_one == true, algorithm_name = 'quadratic-one'; end
 if settings.quadratic_two == true, algorithm_name = 'quadratic-two'; end
 if settings.kalman_like == true, algorithm_name = 'kalman-like'; end
-if settings.kalman == true, algorithm_name = 'kalman'; end
 if settings.independent == true, algorithm_name = 'independent'; end
 
 if settings.batch == true && settings.batch_online == true, algorithm_name = 'batch-online'; end
@@ -25,6 +24,6 @@ end
 
 title(title_string, 'interpreter','tex', 'FontWeight','Normal', 'fontsize', 16);
 
-xlim([1, N + 1]); 
+xlim([0.95, N + 1.07]); 
 yyaxis left; ax = gca; ax.YColor = [0.8 0.3 0]; ax.YLim = ylimit; ylabel('\mu(x) \pm \sigma(x)');
 yyaxis right; ax = gca; ax.YColor = [0 0.5 0]; ax.YLim = [-0.015, max_value * 4]; ylabel('(J^TJ)^{1/2}');

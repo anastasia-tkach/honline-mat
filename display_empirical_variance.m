@@ -2,8 +2,8 @@ function [] = display_empirical_variance(means, standard_deviations, importance_
 
 w = N * 0.040909;
 offset = 1/N;
-line_color = [1, 0.85, 0.5];
-point_color = [1.0 0.5 0.3]; %[0.3, 0.6, 0.8];
+line_color = [1, 0.73, 0.6];
+point_color = [1.0 0.45 0.3]; 
 
 certain_line_color = [0.75, 0.9, 0.7];
 certain_point_color =  [0.25, 0.75, 0.35];
@@ -35,14 +35,12 @@ for j = 1:N
         line_width = 3.2;
         if k == j
             if (frame_centrainty(k) == 0)
-                current_line_color = [1, 0.75, 0.3];
-                current_point_color = [1.0 0.45 0.3];
+                current_line_color = [1.0 0.68 0.53];
+                current_point_color = point_color;
             else
                 current_line_color =  [157, 216, 105]/255;
                 current_point_color =  [0.1, 0.7, 0.3];
             end
-            point_size = 40;
-            line_width = 4.5;
         end
         
         yyaxis left; 
@@ -50,7 +48,7 @@ for j = 1:N
             [j + offset * k, means(j, k) - standard_deviations(j, k)], current_line_color, line_width);
         mypoint([j + offset * k, means(j, k)], current_point_color, point_size);         
         
-        if k == 1, myline([j, ylimit(1)], [j, ylimit(2)], [0.88, 0.88, 0.88], 2); end
+        if k == 1 && j > 1, myline([j, ylimit(1)], [j, ylimit(2)], [0.88, 0.88, 0.88], 2); end
         
         % importance  
         yyaxis right; 
