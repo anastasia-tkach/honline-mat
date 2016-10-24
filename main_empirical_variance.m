@@ -18,7 +18,6 @@ importance_means = zeros(N, N);
 importance_standard_deviations = zeros(N, N);
 current_run_importance = zeros(num_runs, 1);
 
-
 for i = 1:N
     for j = 1:i
         for run_index = 1:num_runs

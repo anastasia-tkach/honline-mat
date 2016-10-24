@@ -1,6 +1,6 @@
-function [f, df] = german_mcclure_kernel(r, dr)
+function [f, df] = german_mcclure_kernel(r, dr, settings)
 
-e = 1.5;
+e = settings.batch_online_robust_tau;
 B = 3;
 
 rho = (r/e)'*(r/e)/(1 + (r/e)' * (r/e));

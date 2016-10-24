@@ -44,7 +44,7 @@ if settings.batch_online_robust && N > settings.batch_size
     beta_0 = x0(1:B);
     r = beta_0 - beta_1;
     dr = - eye(B, B);
-    [f, df] = german_mcclure_kernel(r, dr);
+    [f, df] = german_mcclure_kernel(r, dr, settings);
     F2(B * (L - 1) + 1: B * L) = f;
     J2(B * (L - 1) + 1: B * L, 1:B) = df;
 end

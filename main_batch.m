@@ -41,12 +41,13 @@ settings.kalman_like = false;
 settings.batch = true;
 settings.independent = false;
 
-settings.batch_size = 2;%settings.num_frames;
+settings.batch_size = 2;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
-settings.batch_online = false;
-settings.batch_online_robust = true;
+settings.batch_online = true;
+settings.batch_online_robust = false;
+settings.batch_online_robust_tau = 1;
 
 [settings, history] = set_batch_size(settings);
 
@@ -105,7 +106,7 @@ for N = 1:settings.num_frames
     if (settings.independent)
         for i = 1:N
             X = X_init((B + T) * (i - 1) + 1:(B + T) * i);
-            [X, j] = my_lsqnonlin(@(X) sticks_finger_fg_data(x, segments0, joints, frames{i}), X, settings.num_iters);
+            [X, j] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{i}), X, settings.num_iters);
         end
         H = j' * j;
     end
