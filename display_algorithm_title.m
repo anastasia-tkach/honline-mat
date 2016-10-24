@@ -1,4 +1,4 @@
-function [] = display_algorithm_title(N, w2, ylimit, max_value, settings, problem_type)
+function [] = display_algorithm_title(w2, settings, problem_type)
 
 set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
 algorithm_name = '';
@@ -26,6 +26,3 @@ end
 
 title(title_string, 'interpreter','tex', 'FontWeight','Normal', 'fontsize', 16);
 
-xlim([0.95, N + 1.07]); 
-yyaxis left; ax = gca; ax.YColor = [0.8 0.3 0]; ax.YLim = ylimit; ylabel('\mu(x) \pm \sigma(x)');
-yyaxis right; ax = gca; ax.YColor = [0 0.5 0]; ax.YLim = [-0.015, max_value * 4]; ylabel('(J^TJ)^{1/2}');

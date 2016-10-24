@@ -1,4 +1,5 @@
-function [] = display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ylimit, settings, N, w2, frame_centrainty, problem_type)
+function [] = display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ...
+    ylimit, settings, N, w2, frame_centrainty, problem_type, beta_indices, beta_index)
 
 w = N * 0.040909;
 offset = 1/N;
@@ -8,8 +9,20 @@ point_color = [1.0 0.45 0.3];
 certain_line_color = [0.75, 0.9, 0.7];
 certain_point_color =  [0.25, 0.75, 0.35];
 
-f = figure('units', 'normalized', 'outerposition', [0.1, 0.3, w, 0.55]); hold on;
-set(gca,'position', [0.06 0.06 0.87 0.85], 'units','normalized');
+%% Set up figure/subplot
+if length(beta_indices) == 1 
+    figure('units', 'normalized', 'outerposition', [0.1, 0.3, w, 0.55]); hold on;
+    set(gca,'position', [0.06 0.06 0.87 0.85], 'units','normalized');
+end
+if length(beta_indices) == 2 && beta_index == 1
+    figure('units', 'normalized', 'outerposition', [0.1, 0.07, w, 0.9]); hold on;
+end
+if length(beta_indices) == 2
+    h = subplot(2, 1, beta_index); hold on;
+    p = get(h, 'pos'); set(h, 'pos', [0.06, p(2) - 0.06, 0.87, 0.43]);
+end
+
+%% Color-code frame certainty
 for j = 1:N
     if (frame_centrainty(j) == 0)
         rectangle('Position',[j, ylimit(1), 1, ylimit(2) - ylimit(1)],'FaceColor',[1; 0.98; 0.95],'EdgeColor','none')
@@ -61,7 +74,14 @@ for j = 1:N
     end
 end
 
-%% Print algorithm parameters
+%% Set axis limits and labels
+set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
+xlim([0.95, N + 1.07]); 
+yyaxis left; ax = gca; ax.YColor = [0.8 0.3 0]; ax.YLim = ylimit; ylabel('\mu(x) \pm \sigma(x)');
+yyaxis right; ax = gca; ax.YColor = [0 0.5 0]; ax.YLim = [-0.015, max_value * 4]; ylabel('(J^TJ)^{1/2}');
 
-display_algorithm_title(N, w2, ylimit, max_value, settings, problem_type);
+%% Print algorithm parameters
+if length(beta_indices) == 1 || beta_index == 1
+    display_algorithm_title(w2, settings, problem_type);
+end
 

@@ -32,24 +32,5 @@ end
 
 frame_centrainty = T < 1.5;
 
-display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ylimit, settings, N, w2, frame_centrainty, 'simplest_problem');
+display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ylimit, settings, N, w2, frame_centrainty, 'simplest_problem', 1, 1);
 
-%% Display last iterations
-%{
-figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.45, 0.45]); hold on;
-set(gca,'position', [0.05 0.08 0.93 0.90], 'units','normalized');
-for j = 1:N
-    if (T(j) > 1.5)
-        rectangle('Position',[j, ylimit(1), 1, ylimit(2) - ylimit(1)],'FaceColor',[1; 0.96; 0.93],'EdgeColor','none')
-    else
-        rectangle('Position',[j, ylimit(1), 1, ylimit(2) - ylimit(1)],'FaceColor',[0.96; 1; 0.90],'EdgeColor','none')
-    end
-end
-plot(0:length(history), x_true * ones(length(history) + 1, 1), 'lineWidth', 2, 'color', [1, 0.7, 0.3], 'lineStyle', '-.');
-plot(1:N, means(N, :), '.-', 'lineWidth', 2, 'markersize', 13, 'color', [1, 0.5, 0.4]);
-plot(1:N, means(N, :) + standard_deviations(N, :), 'lineWidth', 2, 'color', [0.65, 0.8, 0.6]);
-plot(1:N, means(N, :) - standard_deviations(N, :), 'lineWidth', 2, 'color', [0.65, 0.8, 0.6]);
-
-set(gca, 'fontSize', 13); xlim([1, N]); ylim(ylimit);
-return;
-%}

@@ -1,4 +1,5 @@
-function [] = display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ylimit, settings, N, w2, frame_centrainty, problem_type)
+function [] = display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ...
+    ylimit, settings, N, w2, frame_centrainty, problem_type, beta_indices, beta_index)
 
 w = 0.6;
 line_color = [1, 0.7, 0.6];
@@ -10,9 +11,18 @@ certain_point_color =  [0.25, 0.75, 0.35];
 point_size = 30;
 line_width = 3;
 
-f = figure('units', 'normalized', 'outerposition', [0.1, 0.3, w, 0.55]); hold on;
-set(gca,'position', [0.06 0.06 0.87 0.85], 'units','normalized');
-
+%% Set up figure/subplot
+if length(beta_indices) == 1 
+    figure('units', 'normalized', 'outerposition', [0.1, 0.3, w, 0.55]); hold on;
+    set(gca,'position', [0.06 0.06 0.87 0.85], 'units','normalized');
+end
+if length(beta_indices) == 2 && beta_index == 1
+    figure('units', 'normalized', 'outerposition', [0.1, 0.07, w, 0.9]); hold on;
+end
+if length(beta_indices) == 2
+    h = subplot(2, 1, beta_index); hold on;
+    p = get(h, 'pos'); set(h, 'pos', [0.06, p(2) - 0.06, 0.87, 0.43]);
+end
 
 max_value = max(importance_means(:) + importance_standard_deviations(:));
 
@@ -60,11 +70,14 @@ for k = 1:N
     
 end
 
-
+%% Set axis limits and labels
+set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
+xlim([0, N + 1]); 
+yyaxis left; ax = gca; ax.YColor = [0.8 0.3 0]; ax.YLim = ylimit; ylabel('\mu(x) \pm \sigma(x)');
+yyaxis right; ax = gca; ax.YColor = [0 0.5 0]; ax.YLim = [-0.015, max_value * 4]; ylabel('(J^TJ)^{1/2}');
 
 %% Print algorithm parameters
+if length(beta_indices) == 1 || beta_index == 1
+    display_algorithm_title(w2, settings, problem_type);
+end
 
-display_algorithm_title(N, w2, ylimit, max_value, settings, problem_type);
-
-
-xlim([0, N + 1]); 
