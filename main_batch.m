@@ -7,7 +7,7 @@ B = 3;
 T = 3;
 D = 3 * settings.num_samples;
 settings.measurement_noise_std = 0.07;
-settings.beta_bias = [-1; -1; 0];
+settings.beta_bias = [0; 0; 0];
 settings.beta_noise_std = 0.5;
 settings.theta_noise_std = 0.15;
 blocks = {[1, 2], [2, 3], [3, 4]};
@@ -22,8 +22,8 @@ theta_certain_2 = [0, 0, pi/3];
 theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/30, pi/30];
 theta_uncertain = [0, 0, 0];
-%thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain_1, 3, 1); repmat(theta_uncertain, 3, 1); repmat(theta_certain_2, 3, 1);  repmat(theta_uncertain, 3, 1)];
-thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
+thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain_1, 3, 1); repmat(theta_uncertain, 3, 1); repmat(theta_certain_2, 3, 1);  repmat(theta_uncertain, 3, 1)];
+%thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 settings.num_frames = size(thetas_true, 1);
 
 [frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, settings);
@@ -39,10 +39,10 @@ if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 
     axis off; axis equal; hold on;
 end
 
-settings.quadratic_one = false;
+settings.quadratic_one = true;
 settings.quadratic_two = false;
 settings.kalman_like = false;
-settings.batch = true;
+settings.batch = false;
 settings.independent = false;
 
 settings.batch_size = 5;
@@ -52,6 +52,8 @@ settings.batch_independent = false;
 settings.batch_online = true;
 settings.batch_online_robust = false;
 settings.batch_online_robust_tau = 1;
+
+settings.shape_prior = true;
 
 [settings, history] = set_batch_size(settings);
 
@@ -70,6 +72,8 @@ for N = 1:settings.num_frames
         x0 = history.x_batch(N - 1, (B + T) + 1:end)';
         
         [X, J, h] = sticks_finger_quadratic_one(X, x0, x_1, h, segments0, joints, frames, N, w2, settings);
+        %[X, J, h] = sticks_finger_quadratic_one_shape_prior(X, x0, x_1, h, segments0, joints, frames, N, w2, settings);
+        
         H = h;
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
     end
