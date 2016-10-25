@@ -24,7 +24,7 @@ end
 
 %% Color-code frame certainty
 for j = 1:N
-    if (frame_centrainty(j) == 0)
+    if (frame_centrainty(j, beta_index) == 0)
         rectangle('Position',[j, ylimit(1), 1, ylimit(2) - ylimit(1)],'FaceColor',[1; 0.98; 0.95],'EdgeColor','none')
     else
         rectangle('Position',[j, ylimit(1), 1, ylimit(2) - ylimit(1)],'FaceColor',[0.96; 1; 0.93],'EdgeColor','none')
@@ -37,7 +37,7 @@ max_value = max(importance_means(:) + importance_standard_deviations(:));
 for j = 1:N
     
     for k = 1:j
-        if (frame_centrainty(k) == 0)
+        if (frame_centrainty(k, beta_index) == 0)
             current_line_color = (1 - k / j ) * [0.95, 0.88, 0.88] + k / j * line_color;
             current_point_color = (1 - k / j ) * [0.85, 0.75, 0.75] + k / j * point_color;
         else
@@ -47,7 +47,7 @@ for j = 1:N
         point_size = 20;
         line_width = 3.2;
         if k == j
-            if (frame_centrainty(k) == 0)
+            if (frame_centrainty(k, beta_index) == 0)
                 current_line_color = [1.0 0.68 0.53];
                 current_point_color = point_color;
             else

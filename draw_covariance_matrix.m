@@ -85,9 +85,11 @@ myline( mu - chisquare_val * 1/sqrt(h(1, 1)) * [1; 0], mu + chisquare_val * 1/sq
 myline( mu - chisquare_val * 1/sqrt(h(2, 2)) * [0; 1], mu + chisquare_val * 1/sqrt(h(2, 2)) * [0; 1], [0.7, 0.7, 0.7], 1);
 
 mypoint(mu, [0, 0.5, 0.7], 50);
-lgnd = legend({'3\sigma elipse', 'x_{n-1}', 'x_n', 'marginalization', 'maximization'}); set(lgnd,'color','none', 'edgecolor', 'none');
-xlabel('x_{n-1}');
-ylabel('x_{n}');
+%lgnd = legend({'3\sigma elipse', 'x_{n-1}', 'x_n', 'marginalization', 'maximization'}); set(lgnd,'color','none', 'edgecolor', 'none');
+%xlabel('x_{n-1}');
+%ylabel('x_{n}');
+xlabel('\beta_1');
+ylabel('\beta_2');
 set(gca, 'fontSize', 13); set(gca,'fontname','Cambria');
 
 

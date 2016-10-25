@@ -9,7 +9,7 @@ certain_line_color = [0.75, 0.9, 0.7];
 certain_point_color =  [0.25, 0.75, 0.35];
 
 point_size = 30;
-line_width = 3;
+line_width = 500/N;
 
 %% Set up figure/subplot
 if length(beta_indices) == 1 
@@ -40,7 +40,7 @@ plot(online_means, 'lineWidth', 2.7, 'color', [245, 207, 184]/255, 'lineStyle', 
 
 %% Plot
 for k = 1:N
-    if (frame_centrainty(k) == 0)
+    if (frame_centrainty(k, beta_index) == 0)
         current_line_color = (1 - k / N ) * [0.95, 0.88, 0.88] + k / N * line_color;
         current_point_color = (1 - k / N ) * [0.85, 0.75, 0.75] + k / N * point_color;
     else
@@ -48,7 +48,7 @@ for k = 1:N
         current_point_color = 0.5 * [0.85, 0.75, 0.75] + 0.5 * certain_point_color;
     end
     if k == N
-        if (frame_centrainty(k) == 0)
+        if (frame_centrainty(k, beta_index) == 0)
             current_line_color = line_color;
             current_point_color = [1.0 0.45 0.3];
         else

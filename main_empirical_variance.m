@@ -1,4 +1,4 @@
-%{
+%%{
 clear; clc;
 rng default;
 num_runs = 100;
@@ -8,7 +8,7 @@ for run_index = 1:num_runs
     main_batch;
     Histories{run_index} = history;
 end
-%}
+%%}5
 beta_indices = 1:2;
 
 %% Compute statistics
@@ -43,12 +43,16 @@ for beta_index = beta_indices
     
     %% Set display parameters
     ylimit = [1.5, 4.5];
-    frame_centrainty = (thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4);
+    if length(beta_indices) == 1
+        frame_centrainty = [(thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4), (thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4)];
+    else
+        frame_centrainty = [thetas_true(:, 2) >= pi/4 , thetas_true(:, 3) >= pi/4];
+    end
     
     %% Display empirical variance
     display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, N, w2, frame_centrainty, 'sticks_finger', beta_indices, beta_index);
     
     %% Display history
-    display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, N, w2, frame_centrainty, 'sticks_finger', beta_indices, beta_index);
+    %display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, N, w2, frame_centrainty, 'sticks_finger', beta_indices, beta_index);
     
 end

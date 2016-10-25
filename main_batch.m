@@ -2,11 +2,12 @@
 %rng default;
 
 %% Parameters
-num_samples = 10;
+settings.num_samples = 10;
 B = 3;
 T = 3;
-D = 3 * num_samples;
+D = 3 * settings.num_samples;
 settings.measurement_noise_std = 0.07;
+settings.beta_bias = [-1; -1; 0];
 settings.beta_noise_std = 0.5;
 settings.theta_noise_std = 0.15;
 blocks = {[1, 2], [2, 3], [3, 4]};
@@ -16,13 +17,16 @@ theta_init = [0; 0; 0];
 [segments0, joints] = segments_and_joints_2D();
 
 %% Scrip
-theta_certain = [0, pi/3, pi/3];
+theta_certain_1 = [0, pi/3, 0];
+theta_certain_2 = [0, 0, pi/3];
+theta_certain_12 = [0, pi/3, pi/3];
+theta_semicertain = [0, pi/30, pi/30];
 theta_uncertain = [0, 0, 0];
-thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain, 4, 1); repmat(theta_uncertain, 7, 1)];
+%thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain_1, 3, 1); repmat(theta_uncertain, 3, 1); repmat(theta_certain_2, 3, 1);  repmat(theta_uncertain, 3, 1)];
+thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 settings.num_frames = size(thetas_true, 1);
 
-[frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, ...
-    settings.beta_noise_std, settings.theta_noise_std, settings.measurement_noise_std, num_samples);
+[frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, settings);
 X_init = zeros((B + T) * settings.num_frames, 1);
 for i = 1:settings.num_frames
     X_init((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = beta_init;
@@ -41,7 +45,7 @@ settings.kalman_like = false;
 settings.batch = true;
 settings.independent = false;
 
-settings.batch_size = 2;
+settings.batch_size = 5;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
@@ -61,13 +65,12 @@ for N = 1:settings.num_frames
     %% Quadratic-one
     if (settings.quadratic_one && N >= 3)
         
-        X = X_init((B + T) * (N - 2) + 1:(B + T) * N);        
+        X = X_init((B + T) * (N - 2) + 1:(B + T) * N);
         x_1 = history.x_batch(N - 1, 1:B + T)';
         x0 = history.x_batch(N - 1, (B + T) + 1:end)';
         
         [X, J, h] = sticks_finger_quadratic_one(X, x0, x_1, h, segments0, joints, frames, N, w2, settings);
-        
-        H = h;       
+        H = h;
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
     end
     
@@ -122,7 +125,7 @@ for N = 1:settings.num_frames
         end
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, D, settings, w2), X, settings.num_iters);
-        H = J' * J;        
+        H = J' * J;
     end
     
     %% Save new historyory
@@ -134,6 +137,10 @@ for N = 1:settings.num_frames
         history.x_batch(N, :) = X(indices);
         history.h_batch(N, :) = diag(H);
     end
+    
+    %% Covariance   
+    %draw_covariance_matrix(X(end - B - T  + 1:end - B - T  + 2), inv(H(end - B - T  + 1:end - B - T  + 2, end - B - T  + 1:end - B - T  + 2)), 0);
+    %xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
     
     %% Display
     if (to_display)
