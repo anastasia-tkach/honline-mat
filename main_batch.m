@@ -22,8 +22,8 @@ theta_certain_2 = [0, 0, pi/3];
 theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/30, pi/30];
 theta_uncertain = [0, 0, 0];
-thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain_1, 3, 1); repmat(theta_uncertain, 3, 1); repmat(theta_certain_2, 3, 1);  repmat(theta_uncertain, 3, 1)];
-%thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
+%thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain_1, 3, 1); repmat(theta_uncertain, 3, 1); repmat(theta_certain_2, 3, 1);  repmat(theta_uncertain, 3, 1)];
+thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 settings.num_frames = size(thetas_true, 1);
 
 [frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, settings);
@@ -41,8 +41,8 @@ end
 
 settings.quadratic_one = false;
 settings.quadratic_two = false;
-settings.kalman_like = false;
-settings.batch = true;
+settings.kalman_like = true;
+settings.batch = false;
 settings.independent = false;
 
 settings.batch_size = 5;
@@ -53,11 +53,12 @@ settings.batch_online = true;
 settings.batch_online_robust = false;
 settings.batch_online_robust_tau = 1;
 
-settings.shape_prior = true;
+settings.shape_prior = false;
 
 [settings, history] = set_batch_size(settings);
 
-w2 = 1;
+settings.w2 = 1;
+settings.w4 = 1;
 h = [];
 
 %% Tracking
@@ -71,7 +72,7 @@ for N = 1:settings.num_frames
         x_1 = history.x_batch(N - 1, 1:B + T)';
         x0 = history.x_batch(N - 1, (B + T) + 1:end)';
         
-        [X, J, h] = sticks_finger_quadratic_one(X, x0, x_1, h, segments0, joints, frames, N, w2, settings);
+        [X, J, h] = sticks_finger_quadratic_one(X, x0, x_1, h, segments0, joints, frames, N, settings);
         
         H = h;
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
@@ -83,7 +84,7 @@ for N = 1:settings.num_frames
         
         x_1 = history.x_batch(N - 1, 1:B + T)';
         x0 = history.x_batch(N - 1, (B + T) + 1:end)';
-        [X, J, h] = sticks_finger_laplace_approx(X, x0, x_1, h, segments0, joints, frames, N, w2, settings.num_iters);
+        [X, J, h] = sticks_finger_laplace_approx(X, x0, x_1, h, segments0, joints, frames, N, settings);
         
         H = zeros(2 * (B + T), 2 * (B + T));
         a = h(1:B, 1:B); b = h(1:B, B + T + 1:B + T + B); c = h(B + T + 1:B + T + B, 1:B); d = h(B + T + 1:B + T + B, B + T + 1:B + T + B);
@@ -101,7 +102,7 @@ for N = 1:settings.num_frames
             x0 = history.x_batch(N - 1, :)';
         end
         
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_like(X, x0, segments0, joints, frames{N}, JtJ, N, w2), X, settings.num_iters);
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_like(X, x0, segments0, joints, frames{N}, JtJ, N, settings), X, settings.num_iters);
         
         J1 = J(1:D, 1:B);
         JtJ = JtJ + (J1'* J1);
@@ -127,7 +128,7 @@ for N = 1:settings.num_frames
             x0 = history.x_batch(N - 1, 1:B + T)';
         end
         
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, D, settings, w2), X, settings.num_iters);
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, D, settings), X, settings.num_iters);
         H = J' * J;
     end
     
@@ -142,8 +143,8 @@ for N = 1:settings.num_frames
     end
     
     %% Covariance   
-    draw_covariance_matrix(X(end - B - T  + 1:end - B - T  + 2), inv(H(end - B - T  + 1:end - B - T  + 2, end - B - T  + 1:end - B - T  + 2)), 0);
-    xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
+    %draw_covariance_matrix(X(end - B - T  + 1:end - B - T  + 2), inv(H(end - B - T  + 1:end - B - T  + 2, end - B - T  + 1:end - B - T  + 2)), 0);
+    %xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
     
     %% Display
     if (to_display)

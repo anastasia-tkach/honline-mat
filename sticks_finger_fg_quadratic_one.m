@@ -1,4 +1,4 @@
-function [F, J, h] = sticks_finger_fg_quadratic_one(x2, x0, segments0, joints, data_points, h_, w2, settings)
+function [F, J, h] = sticks_finger_fg_quadratic_one(x2, x0, segments0, joints, data_points, h_, settings)
 
 B = 3;  T = 3;
 
@@ -9,7 +9,7 @@ else
     W3 = zeros(B, B);
 end
 
-W2 = w2 * eye(B, B);
+W2 = settings.w2 * eye(B, B);
 
 %% Optimal value of x1
 M = inv(W2 + W3) * W2;

@@ -1,5 +1,5 @@
 function [] = display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ...
-    ylimit, settings, N, w2, frame_centrainty, problem_type, beta_indices, beta_index)
+    ylimit, settings, N, frame_centrainty, problem_type, beta_indices, beta_index)
 
 w = N * 0.040909;
 offset = 1/N;
@@ -82,6 +82,6 @@ yyaxis right; ax = gca; ax.YColor = [0 0.5 0]; ax.YLim = [-0.015, max_value * 4]
 
 %% Print algorithm parameters
 if length(beta_indices) == 1 || beta_index == 1
-    display_algorithm_title(w2, settings, problem_type);
+    display_algorithm_title(settings, problem_type);
 end
 

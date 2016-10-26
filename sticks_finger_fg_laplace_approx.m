@@ -1,4 +1,4 @@
-function [F, J, h] = sticks_finger_fg_laplace_approx(xx, x_0, segments0, joints, data_points, h_, w2)
+function [F, J, h] = sticks_finger_fg_laplace_approx(xx, x_0, segments0, joints, data_points, h_, settings)
 
 B = 3;  T = 3;
 M = B + T;
@@ -18,9 +18,9 @@ ddF1(:, M + 1:2 * M, M + 1:2 * M) = ddF1_dx2_dx2;
 
 
 %% Closeness term
-F2 = sqrt(w2) * (xx(M + 1:M + B) - xx(1:B));
-dF2_dx1 = [- sqrt(w2) * eye(B, B), zeros(B, T)];
-dF2_dx2 = [ sqrt(w2) * eye(B, B), zeros(B, T)];
+F2 = sqrt(settings.w2) * (xx(M + 1:M + B) - xx(1:B));
+dF2_dx1 = [- sqrt(settings.w2) * eye(B, B), zeros(B, T)];
+dF2_dx2 = [ sqrt(settings.w2) * eye(B, B), zeros(B, T)];
 dF2 = [dF2_dx1, dF2_dx2];
 
 ddF2 = zeros(M, 2 * M, 2 * M);

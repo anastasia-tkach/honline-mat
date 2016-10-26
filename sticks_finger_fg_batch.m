@@ -1,4 +1,4 @@
-function [F, J] = sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, D, settings, w2)
+function [F, J] = sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, D, settings)
 
 B = 3; T = 3;
 L = min(N, settings.batch_size);
@@ -50,7 +50,6 @@ if settings.batch_online_robust && N > settings.batch_size
 end
 
 %% Uniform shape prior
-w4 = 1;
 Q = ones(1, B);
 W4 = (eye(B, B) -  1/B * (Q' * Q));
 
@@ -63,11 +62,11 @@ for i = 1:L
 end
 
 %% Assemble
-F = [F1; sqrt(w2) * F2];
-J = [J1; sqrt(w2) * J2];
+F = [F1; sqrt(settings.w2) * F2];
+J = [J1; sqrt(settings.w2) * J2];
 
 if settings.shape_prior
-    F = [F1; sqrt(w2) * F2; sqrt(w4) * F4];
-    J = [J1; sqrt(w2) * J2; sqrt(w4) * J4];
+    F = [F1; sqrt(settings.w2) * F2; sqrt(settings.w4) * F4];
+    J = [J1; sqrt(settings.w2) * J2; sqrt(settings.w4) * J4];
 end
 
