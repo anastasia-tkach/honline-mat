@@ -49,8 +49,25 @@ if settings.batch_online_robust && N > settings.batch_size
     J2(B * (L - 1) + 1: B * L, 1:B) = df;
 end
 
+%% Uniform shape prior
+w4 = 1;
+Q = ones(1, B);
+W4 = (eye(B, B) -  1/B * (Q' * Q));
+
+F4 = zeros(B * L, 1);
+J4 = zeros(B * L, L * (B + T));
+for i = 1:L
+    beta_i = X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B);
+    F4(B * (i - 1) + 1: B * i) = W4 * beta_i;
+    J4(B * (i - 1) + 1: B * i, (B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = W4;
+end
 
 %% Assemble
 F = [F1; sqrt(w2) * F2];
 J = [J1; sqrt(w2) * J2];
+
+if settings.shape_prior
+    F = [F1; sqrt(w2) * F2; sqrt(w4) * F4];
+    J = [J1; sqrt(w2) * J2; sqrt(w4) * J4];
+end
 

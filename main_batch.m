@@ -39,10 +39,10 @@ if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 
     axis off; axis equal; hold on;
 end
 
-settings.quadratic_one = true;
+settings.quadratic_one = false;
 settings.quadratic_two = false;
 settings.kalman_like = false;
-settings.batch = false;
+settings.batch = true;
 settings.independent = false;
 
 settings.batch_size = 5;
@@ -72,7 +72,6 @@ for N = 1:settings.num_frames
         x0 = history.x_batch(N - 1, (B + T) + 1:end)';
         
         [X, J, h] = sticks_finger_quadratic_one(X, x0, x_1, h, segments0, joints, frames, N, w2, settings);
-        %[X, J, h] = sticks_finger_quadratic_one_shape_prior(X, x0, x_1, h, segments0, joints, frames, N, w2, settings);
         
         H = h;
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
@@ -143,8 +142,8 @@ for N = 1:settings.num_frames
     end
     
     %% Covariance   
-    %draw_covariance_matrix(X(end - B - T  + 1:end - B - T  + 2), inv(H(end - B - T  + 1:end - B - T  + 2, end - B - T  + 1:end - B - T  + 2)), 0);
-    %xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
+    draw_covariance_matrix(X(end - B - T  + 1:end - B - T  + 2), inv(H(end - B - T  + 1:end - B - T  + 2, end - B - T  + 1:end - B - T  + 2)), 0);
+    xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
     
     %% Display
     if (to_display)
