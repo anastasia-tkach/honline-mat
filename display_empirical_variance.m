@@ -14,12 +14,19 @@ if length(beta_indices) == 1
     figure('units', 'normalized', 'outerposition', [0.1, 0.3, w, 0.55]); hold on;
     set(gca,'position', [0.06 0.06 0.87 0.85], 'units','normalized');
 end
-if length(beta_indices) == 2 && beta_index == 1
+if length(beta_indices) > 1 && beta_index == 1
     figure('units', 'normalized', 'outerposition', [0.1, 0.07, w, 0.9]); hold on;
 end
 if length(beta_indices) == 2
     h = subplot(2, 1, beta_index); hold on;
     p = get(h, 'pos'); set(h, 'pos', [0.06, p(2) - 0.06, 0.87, 0.43]);
+end
+if length(beta_indices) == 3
+    h = subplot(3, 1, beta_index); hold on; p = get(h, 'pos'); 
+    if beta_index == 1, shift = p(2) - 0.04; end
+    if beta_index == 2, shift = p(2) - 0.055; end
+    if beta_index == 3, shift = p(2) - 0.07; end
+    set(h, 'pos', [0.06, shift, 0.87, 0.28]);
 end
 
 %% Color-code frame certainty
@@ -65,7 +72,7 @@ for j = 1:N
         
         % importance  
         yyaxis right; 
-        y_position = 0.08;
+        y_position = max_value/20;
         myline([j + offset * k, y_position], ...
             [j + offset * k, y_position + importance_means(j, k) + importance_standard_deviations(j, k)], [0.75, 0.9, 0.7], 3.2);
         myline([j + offset * k, y_position], ...

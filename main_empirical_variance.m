@@ -8,8 +8,8 @@ for run_index = 1:num_runs
     main_batch;
     Histories{run_index} = history;
 end
-%%}5
-beta_indices = 1:2;
+%%}
+beta_indices = 1:3;
 
 %% Compute statistics
 
@@ -45,8 +45,12 @@ for beta_index = beta_indices
     ylimit = [1.5, 4.5];
     if length(beta_indices) == 1
         frame_centrainty = [(thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4), (thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4)];
-    else
+    end
+    if length(beta_indices) == 2
         frame_centrainty = [thetas_true(:, 2) >= pi/4 , thetas_true(:, 3) >= pi/4];
+    end
+    if length(beta_indices) == 3
+        frame_centrainty = [thetas_true(:, 2) >= pi/4 , (thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4), thetas_true(:, 3) >= pi/4];
     end
     
     %% Display empirical variance

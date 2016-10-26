@@ -22,8 +22,8 @@ theta_certain_2 = [0, 0, pi/3];
 theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/30, pi/30];
 theta_uncertain = [0, 0, 0];
-%thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain_1, 3, 1); repmat(theta_uncertain, 3, 1); repmat(theta_certain_2, 3, 1);  repmat(theta_uncertain, 3, 1)];
-thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
+thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain_1, 3, 1); repmat(theta_uncertain, 3, 1); repmat(theta_certain_2, 3, 1);  repmat(theta_uncertain, 3, 1)];
+%thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 settings.num_frames = size(thetas_true, 1);
 
 [frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, settings);
@@ -35,15 +35,15 @@ end
 
 to_display = false;
 
-if (to_display), figure('units', 'normalized', 'outerposition', [0.1, 0.1, 0.8, 0.8]);
+if (to_display), figure('units', 'normalized', 'outerposition', [0.25, 0.275, 0.45, 0.7]);
     axis off; axis equal; hold on;
 end
 
 settings.quadratic_one = false;
 settings.quadratic_two = false;
-settings.kalman_like = true;
+settings.kalman_like = false;
 settings.batch = false;
-settings.independent = false;
+settings.independent = true;
 
 settings.batch_size = 5;
 settings.num_iters = 20;
@@ -111,10 +111,8 @@ for N = 1:settings.num_frames
     
     %% Separate optimization
     if (settings.independent)
-        for i = 1:N
-            X = X_init((B + T) * (i - 1) + 1:(B + T) * i);
-            [X, j] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{i}), X, settings.num_iters);
-        end
+        X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
+        [X, j] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}), X, settings.num_iters);
         H = j' * j;
     end
     
@@ -132,7 +130,7 @@ for N = 1:settings.num_frames
         H = J' * J;
     end
     
-    %% Save new historyory
+    %% Save new history
     if N <= settings.batch_size
         history.x_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); X];
         history.h_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); diag(H)];
@@ -148,15 +146,16 @@ for N = 1:settings.num_frames
     
     %% Display
     if (to_display)
-        betas_N = X(end - (B + T) + 1:end - T);
-        thetas_N = X(end - T + 1:end);
+        beta = X(end - (B + T) + 1:end - T);        
+        theta = X(end - T + 1:end);
         data_points = frames{N};
         [segments0, joints] = segments_and_joints_2D();
-        [segments0] = shape_2D(segments0, betas_N);
-        [segments] = pose_2D(segments0, joints, thetas_N);
+        [segments0] = shape_2D(segments0, beta);
+        [segments] = pose_2D(segments0, joints, theta);
         [segment_indices, model_points] = compute_correspondences_2D(segments, blocks, data_points);
         clf; hold on; axis off; axis equal; set(gcf,'color','w');
-        display_sticks_finger(segments, data_points, model_points, settings.num_iters);
+        display_sticks_finger(segments, data_points, model_points);
+        waitforbuttonpress
     end
 end
 

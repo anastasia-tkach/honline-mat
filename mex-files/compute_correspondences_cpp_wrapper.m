@@ -18,9 +18,9 @@ for j = 1:length(data_points)
     DataPoints(j, :) = data_points{j}';
 end
 
-%[segment_indices, ModelPoints] = compute_correspondences_matlab(Centers, Blocks, DataPoints);
+[segment_indices, ModelPoints] = compute_correspondences_matlab(Centers, Blocks, DataPoints);
 
-[segment_indices, ModelPoints] = compute_correspondences_cpp([size(Centers, 1), size(Blocks, 1), size(DataPoints, 1)], Centers, Blocks, DataPoints);
+%[segment_indices, ModelPoints] = compute_correspondences_cpp([size(Centers, 1), size(Blocks, 1), size(DataPoints, 1)], Centers, Blocks, DataPoints);
 
 model_points = cell(length(data_points), 1);
 for j = 1:length(data_points)
