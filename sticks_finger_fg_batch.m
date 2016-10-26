@@ -1,16 +1,19 @@
-function [F, J] = sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, D, settings)
+function [F, J] = sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, settings)
 
 B = 3; T = 3;
 L = min(N, settings.batch_size);
 
 %% Data term
 
-F1 = zeros(D * L, 1);
-J1 = zeros(D * L, (B + T) * L);
+F1 = zeros(0, 1);
+J1 = zeros(0, (B + T) * L);
+count = 0;
 for i = 1:L
-    [f1, j1] = sticks_finger_fg_data(X((B + T) * (i - 1) + 1:(B + T) * i), segments0, joints, frames{N - L + i});
-    F1(D * (i - 1) + 1:D * i) = f1;
-    J1(D * (i - 1) + 1:D * i, (B + T) * (i - 1) + 1:(B + T) * i) = j1;
+    [f1, j1] = sticks_finger_fg_data(X((B + T) * (i - 1) + 1:(B + T) * i), segments0, joints, frames{N - L + i}, settings);
+    num_points = size(f1, 1);
+    F1(count + 1:count + num_points) = f1;
+    J1(count + 1:count + num_points, (B + T) * (i - 1) + 1:(B + T) * i) = j1;
+    count = count + num_points;
 end
 
 %% Closeness term

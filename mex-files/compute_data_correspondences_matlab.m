@@ -1,4 +1,4 @@
-function [I, M] = compute_correspondences_matlab(C, B, D)
+function [I, M] = compute_data_correspondences_matlab(C, B, D)
 
 RAND_MAX = 32767;
 num_points = size(D, 1);

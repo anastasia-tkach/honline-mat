@@ -1,5 +1,5 @@
 function [] = display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ...
-    ylimit, settings, N, w2, frame_centrainty, problem_type, beta_indices, beta_index)
+    ylimit, settings, N, frame_centrainty, problem_type, beta_indices, beta_index)
 
 w = 0.6;
 line_color = [1, 0.7, 0.6];
@@ -16,12 +16,19 @@ if length(beta_indices) == 1
     figure('units', 'normalized', 'outerposition', [0.1, 0.3, w, 0.55]); hold on;
     set(gca,'position', [0.06 0.06 0.87 0.85], 'units','normalized');
 end
-if length(beta_indices) == 2 && beta_index == 1
+if length(beta_indices) > 1 && beta_index == 1
     figure('units', 'normalized', 'outerposition', [0.1, 0.07, w, 0.9]); hold on;
 end
 if length(beta_indices) == 2
     h = subplot(2, 1, beta_index); hold on;
     p = get(h, 'pos'); set(h, 'pos', [0.06, p(2) - 0.06, 0.87, 0.43]);
+end
+if length(beta_indices) == 3
+    h = subplot(3, 1, beta_index); hold on; p = get(h, 'pos'); 
+    if beta_index == 1, shift = p(2) - 0.04; end
+    if beta_index == 2, shift = p(2) - 0.055; end
+    if beta_index == 3, shift = p(2) - 0.07; end
+    set(h, 'pos', [0.06, shift, 0.87, 0.28]);
 end
 
 max_value = max(importance_means(:) + importance_standard_deviations(:));
@@ -64,7 +71,7 @@ for k = 1:N
     
     % importance
     yyaxis right;
-    y_position = 0.08;
+    y_position = max_value/20;
     myline([k, y_position], [k, y_position + importance_means(k, k) + importance_standard_deviations(k, k)], [0.75, 0.9, 0.7], line_width);
     myline([k, y_position], [k, y_position + importance_means(k, k)], [0.65, 0.8, 0.6], line_width);
     
@@ -78,6 +85,6 @@ yyaxis right; ax = gca; ax.YColor = [0 0.5 0]; ax.YLim = [-0.015, max_value * 4]
 
 %% Print algorithm parameters
 if length(beta_indices) == 1 || beta_index == 1
-    display_algorithm_title(w2, settings, problem_type);
+    display_algorithm_title(settings, problem_type);
 end
 

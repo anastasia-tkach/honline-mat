@@ -1,11 +1,10 @@
-%clear; clc;
-%rng default;
+% clear; clc;
+% rng default;
 
 %% Parameters
 settings.num_samples = 10;
-B = 3;
+B = 3 ;
 T = 3;
-D = 3 * settings.num_samples;
 settings.measurement_noise_std = 0.07;
 settings.beta_bias = [0; 0; 0];
 settings.beta_noise_std = 0.5;
@@ -22,7 +21,8 @@ theta_certain_2 = [0, 0, pi/3];
 theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/30, pi/30];
 theta_uncertain = [0, 0, 0];
-thetas_true = [repmat(theta_uncertain, 3, 1); repmat(theta_certain_1, 3, 1); repmat(theta_uncertain, 3, 1); repmat(theta_certain_2, 3, 1);  repmat(theta_uncertain, 3, 1)];
+tact = 10;
+thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
 %thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 settings.num_frames = size(thetas_true, 1);
 
@@ -34,18 +34,18 @@ for i = 1:settings.num_frames
 end
 
 to_display = false;
-
-if (to_display), figure('units', 'normalized', 'outerposition', [0.25, 0.275, 0.45, 0.7]);
+if (to_display), 
+    figure('units', 'normalized', 'outerposition', [0.25, 0.275, 0.45, 0.7]);
     axis off; axis equal; hold on;
 end
 
-settings.quadratic_one = false;
+settings.quadratic_one = true;
 settings.quadratic_two = false;
 settings.kalman_like = false;
 settings.batch = false;
-settings.independent = true;
+settings.independent = false;
 
-settings.batch_size = 5;
+settings.batch_size = 2;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
@@ -54,6 +54,9 @@ settings.batch_online_robust = false;
 settings.batch_online_robust_tau = 1;
 
 settings.shape_prior = false;
+settings.data_model_energy = true;
+settings.model_data_energy = false;
+settings.silhouette_energy = true;
 
 [settings, history] = set_batch_size(settings);
 
@@ -104,7 +107,7 @@ for N = 1:settings.num_frames
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_like(X, x0, segments0, joints, frames{N}, JtJ, N, settings), X, settings.num_iters);
         
-        J1 = J(1:D, 1:B);
+        J1 = J(1:end - B, 1:B);
         JtJ = JtJ + (J1'* J1);
         H = [JtJ, zeros(B, B); zeros(B, B), zeros(B, B)];
     end
@@ -112,7 +115,7 @@ for N = 1:settings.num_frames
     %% Separate optimization
     if (settings.independent)
         X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
-        [X, j] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}), X, settings.num_iters);
+        [X, j] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings), X, settings.num_iters);
         H = j' * j;
     end
     
@@ -126,7 +129,7 @@ for N = 1:settings.num_frames
             x0 = history.x_batch(N - 1, 1:B + T)';
         end
         
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, D, settings), X, settings.num_iters);
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, settings), X, settings.num_iters);
         H = J' * J;
     end
     
@@ -155,7 +158,8 @@ for N = 1:settings.num_frames
         [segment_indices, model_points] = compute_correspondences_2D(segments, blocks, data_points);
         clf; hold on; axis off; axis equal; set(gcf,'color','w');
         display_sticks_finger(segments, data_points, model_points);
-        waitforbuttonpress
+        pause(0.1);
+        %waitforbuttonpress
     end
 end
 

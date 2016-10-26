@@ -3,7 +3,7 @@ function [F, J] = sticks_finger_fg_kalman_like(x, x_prev, segments0, joints, dat
 B = 3; T = 3;
 
 %% Data term
-[F1, J1, ~] = sticks_finger_fg_data(x, segments0, joints, data_points);
+[F1, J1, ~] = sticks_finger_fg_data(x, segments0, joints, data_points, settings);
 
 %% Closeness term
 F2 = zeros(B, 1);

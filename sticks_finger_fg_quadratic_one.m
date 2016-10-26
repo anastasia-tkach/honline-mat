@@ -20,7 +20,7 @@ x1_opt = M * x2(1:B) + m;
 I = eye(B, B);
 
 % data energy
-[F1, dF1_dx2, ~] = sticks_finger_fg_data(x2, segments0, joints, data_points);
+[F1, dF1_dx2, ~] = sticks_finger_fg_data(x2, segments0, joints, data_points, settings);
 
 % closeness energy
 F2 = sqrtm(W2) * (x2(1:B) - M * x2(1:B) - m);
