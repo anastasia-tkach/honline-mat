@@ -1,6 +1,7 @@
-clear; clc;
-rng default;
-
+clear; clc; close all;
+%rng default;
+global video_writer;
+    
 %% Parameters
 settings.num_samples = 10;
 B = 3 ;
@@ -24,6 +25,7 @@ theta_uncertain = [0, 0, 0];
 tact = 3;
 thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
 %thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
+
 settings.num_frames = size(thetas_true, 1);
 
 [frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, settings);
@@ -33,11 +35,17 @@ for i = 1:settings.num_frames
     X_init((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
 end
 
-settings.store_covariance = true;
-settings.display = false;
-if (settings.display), 
+settings.store_covariance = false;
+settings.display_converged = true;
+settings.display_iterations = false;
+settings.write_video = false;
+if (settings.display_converged || settings.display_iterations), 
     figure('units', 'normalized', 'outerposition', [0.25, 0.275, 0.45, 0.7]);
     axis off; axis equal; hold on;
+end
+if settings.write_video
+    video_writer = VideoWriter('C:\Users\tkach\Desktop\newfile.avi'); % iter - 8, seq - 5
+    video_writer.FrameRate = 5; video_writer.Quality = 100; open(video_writer);
 end
 
 settings.quadratic_one = false;
@@ -46,7 +54,7 @@ settings.kalman_like = false;
 settings.batch = true;
 settings.independent = false;
 
-settings.batch_size = settings.num_frames;
+settings.batch_size = 15;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
@@ -56,7 +64,7 @@ settings.batch_online_robust_tau = 1;
 
 settings.shape_prior = false;
 settings.data_model_energy = true;
-settings.model_data_energy = true;
+settings.model_data_energy = false;
 settings.silhouette_energy = false;
 
 [settings, history] = set_batch_size(settings);
@@ -151,7 +159,7 @@ for N = 1:settings.num_frames
     %xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
     
     %% Display
-    if (settings.display)
+    if (settings.display_converged)
         beta = X(end - (B + T) + 1:end - T);        
         theta = X(end - T + 1:end);
         data_points = frames{N};
@@ -161,10 +169,16 @@ for N = 1:settings.num_frames
         [segment_indices, model_points] = compute_correspondences_2D(segments, blocks, data_points);
         clf; hold on; axis off; axis equal; set(gcf,'color','w');
         display_sticks_finger(segments, data_points, model_points);
-        pause(0.1);
-        %waitforbuttonpress
+        drawnow; pause(0.05); %waitforbuttonpress
+        
+        if settings.write_video
+            f = getframe();
+            writeVideo(video_writer, f.cdata);
+        end
+        
     end
 end
 
+if exist('video_writer', 'var'), video_writer.close(); end
 
 

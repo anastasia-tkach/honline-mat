@@ -155,7 +155,7 @@ for k = 1:num_points
     %%}
     %% Sstore to matrices 
     %j = j./10;
-    %j(:, 4:6) = j(:, 4:6)./50;
+    %j(:, 1:3) = 0;
     
     F(k) = n' * (d - m);   
     J(k, :) = - n' * j;
@@ -175,6 +175,15 @@ for k = 1:num_points
     %%}
 end 
 
+%% Verify dm
+%{
+dm_numerical = my_gradient(m_, bt);
+dm_analytical = dm_(bt);
+dm_numerical
+dm_analytical
+%}
+
+%% Verify gradient and hessian
 %{
 V = my_gradient(F_, bt);
 figure; imagesc(J_(bt) - V); axis equal; colorbar;

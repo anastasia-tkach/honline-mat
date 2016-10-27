@@ -14,4 +14,3 @@ mypoints({a}, [255, 173, 153]/255, 35);
 
 mypoints(data_points, [74, 154, 99]/255, 15);
 ylim([-2, 13]); xlim([-7, 7]);
-drawnow;

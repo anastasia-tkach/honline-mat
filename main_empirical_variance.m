@@ -77,4 +77,4 @@ end
 
 %% Display covariance 1-2
 settings.num_runs = num_runs;
-display_covariance(settings, results_history, covariance_history, frame_certainty);
+%display_covariance(settings, results_history, covariance_history, frame_certainty);
