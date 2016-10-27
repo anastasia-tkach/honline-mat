@@ -1,28 +1,8 @@
 function [] = draw_covariance_matrix(mu, sigma, frame_certainty)
 
-[eigenvec, eigenval] = eig(sigma);
-eigenval = diag(eigenval);
-largest_eigenval = max(eigenval);
-largest_eigenvec = eigenvec(:, eigenval == largest_eigenval);
-smallest_eigenval = min(eigenval);
-smallest_eigenvec = eigenvec(:, eigenval == smallest_eigenval);
-
-% Calculate the angle between the x-axis and the largest eigenvector
-phi = atan2(largest_eigenvec(2), largest_eigenvec(1));
-if(phi < 0), phi = phi + 2*pi; end
-
-% Get the 95% confidence interval error ellipse
 chisquare_val = 2.4477;
-a = chisquare_val*sqrt(largest_eigenval);
-b = chisquare_val*sqrt(smallest_eigenval);
 
-% the ellipse in x and y coordinates
-ellipse_x_r = a*cos(linspace(0,2*pi));
-ellipse_y_r = b*sin(linspace(0,2*pi));
-
-%Define a rotation matrix
-R = [ cos(phi) sin(phi); -sin(phi) cos(phi) ];
-r_ellipse = [ellipse_x_r;ellipse_y_r]' * R;
+[r_ellipse, eigenval, eigenvec] = get_covarince_elipse(sigma, chisquare_val);
 
 %% Draw the error ellipse
 mu = [0; 0];

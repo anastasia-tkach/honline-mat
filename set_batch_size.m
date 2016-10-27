@@ -27,6 +27,10 @@ end
 history.x_batch = zeros(settings.num_frames, (B + T) * settings.batch_size);
 history.h_batch = zeros(settings.num_frames, (B + T) * settings.batch_size);
 
+if settings.store_covariance
+    history.covariance = zeros(settings.num_frames, B, B);
+end
+
 %% Check if there is only one algorithm set to true
 
 if active_algorithms_count == 0

@@ -1,5 +1,5 @@
-% clear; clc;
-% rng default;
+clear; clc;
+rng default;
 
 %% Parameters
 settings.num_samples = 10;
@@ -21,7 +21,7 @@ theta_certain_2 = [0, 0, pi/3];
 theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/30, pi/30];
 theta_uncertain = [0, 0, 0];
-tact = 10;
+tact = 3;
 thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
 %thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 settings.num_frames = size(thetas_true, 1);
@@ -33,19 +33,20 @@ for i = 1:settings.num_frames
     X_init((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
 end
 
-to_display = false;
-if (to_display), 
+settings.store_covariance = true;
+settings.display = false;
+if (settings.display), 
     figure('units', 'normalized', 'outerposition', [0.25, 0.275, 0.45, 0.7]);
     axis off; axis equal; hold on;
 end
 
-settings.quadratic_one = true;
+settings.quadratic_one = false;
 settings.quadratic_two = false;
 settings.kalman_like = false;
-settings.batch = false;
+settings.batch = true;
 settings.independent = false;
 
-settings.batch_size = 2;
+settings.batch_size = settings.num_frames;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
@@ -55,8 +56,8 @@ settings.batch_online_robust_tau = 1;
 
 settings.shape_prior = false;
 settings.data_model_energy = true;
-settings.model_data_energy = false;
-settings.silhouette_energy = true;
+settings.model_data_energy = true;
+settings.silhouette_energy = false;
 
 [settings, history] = set_batch_size(settings);
 
@@ -76,7 +77,6 @@ for N = 1:settings.num_frames
         x0 = history.x_batch(N - 1, (B + T) + 1:end)';
         
         [X, J, h] = sticks_finger_quadratic_one(X, x0, x_1, h, segments0, joints, frames, N, settings);
-        
         H = h;
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
     end
@@ -142,13 +142,16 @@ for N = 1:settings.num_frames
         history.x_batch(N, :) = X(indices);
         history.h_batch(N, :) = diag(H);
     end
+    if settings.store_covariance
+        history.covariance(N, :, :) = H(end - B - T + 1:end - T,  end - B - T + 1:end - T);
+    end
     
     %% Covariance   
     %draw_covariance_matrix(X(end - B - T  + 1:end - B - T  + 2), inv(H(end - B - T  + 1:end - B - T  + 2, end - B - T  + 1:end - B - T  + 2)), 0);
     %xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
     
     %% Display
-    if (to_display)
+    if (settings.display)
         beta = X(end - (B + T) + 1:end - T);        
         theta = X(end - T + 1:end);
         data_points = frames{N};
