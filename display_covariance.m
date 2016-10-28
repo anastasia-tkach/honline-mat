@@ -19,7 +19,7 @@ for frame_index = 1:settings.num_frames
         h = squeeze(covariance_history(run_index, frame_index, 1:2, 1:2));
         sigma = inv(h);
         [r_ellipse] = get_covarince_elipse(sigma, chisquare_val);
-        plot(r_ellipse(:,1) + mu(1), r_ellipse(:,2) + mu(2), '-', 'lineWidth', 2, 'color', 0.9 * color);
+        plot(r_ellipse(:,1) + mu(1), r_ellipse(:,2) + mu(2), '-', 'lineWidth', 2, 'color', 0.93 * color);
         
         mean_h = mean_h + h;
         mean_mu = mean_mu + mu;

@@ -53,22 +53,40 @@ if settings.batch_online_robust && N > settings.batch_size
 end
 
 %% Uniform shape prior
-Q = ones(1, B);
-W4 = (eye(B, B) -  1/B * (Q' * Q));
-
-F4 = zeros(B * L, 1);
-J4 = zeros(B * L, L * (B + T));
-for i = 1:L
-    beta_i = X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B);
-    F4(B * (i - 1) + 1: B * i) = W4 * beta_i;
-    J4(B * (i - 1) + 1: B * i, (B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = W4;
+if settings.uniform_shape_prior
+    Q = ones(1, B);
+    W4 = (eye(B, B) -  1/B * (Q' * Q));
+    
+    F4 = zeros(B * L, 1);
+    J4 = zeros(B * L, L * (B + T));
+    for i = 1:L
+        beta_i = X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B);
+        F4(B * (i - 1) + 1: B * i) = W4 * beta_i;
+        J4(B * (i - 1) + 1: B * i, (B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = W4;
+    end
 end
+
+%% Constant-sum shape prior
+if settings.constant_sum_shape_prior
+    c = 9;
+    Q = ones(1, B);       
+    %c = 6;
+    %Q = [1, 1, 0];
+    F4 = zeros(1 * L, 1);
+    J4 = zeros(1 * L, L * (B + T));
+    for i = 1:L
+        beta_i = X((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B);
+        F4(i) = Q * beta_i - c;
+        J4(i, (B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = Q;
+    end
+end
+
 
 %% Assemble
 F = [F1; sqrt(settings.w2) * F2];
 J = [J1; sqrt(settings.w2) * J2];
 
-if settings.shape_prior
+if settings.uniform_shape_prior || settings.constant_sum_shape_prior
     F = [F1; sqrt(settings.w2) * F2; sqrt(settings.w4) * F4];
     J = [J1; sqrt(settings.w2) * J2; sqrt(settings.w4) * J4];
 end

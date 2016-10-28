@@ -1,5 +1,6 @@
-clear; clc; close all;
-%rng default;
+% clear; clc; 
+% close all;
+% rng default;
 global video_writer;
     
 %% Parameters
@@ -20,7 +21,7 @@ theta_init = [0; 0; 0];
 theta_certain_1 = [0, pi/3, 0];
 theta_certain_2 = [0, 0, pi/3];
 theta_certain_12 = [0, pi/3, pi/3];
-theta_semicertain = [0, pi/30, pi/30];
+theta_semicertain = [0, pi/60, pi/60];
 theta_uncertain = [0, 0, 0];
 tact = 3;
 thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
@@ -35,8 +36,35 @@ for i = 1:settings.num_frames
     X_init((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
 end
 
-settings.store_covariance = false;
-settings.display_converged = true;
+%% Algorithm
+settings.quadratic_one = true;
+settings.quadratic_two = false;
+settings.kalman_like = false;
+settings.batch = false;
+settings.independent = false;
+
+settings.batch_size = 2;
+
+%% Parameters
+settings.num_iters = 20;
+
+settings.batch_independent = false;
+settings.batch_online = true;
+settings.batch_online_robust = false;
+settings.batch_online_robust_tau = 1;
+
+settings.uniform_shape_prior = false;
+settings.constant_sum_shape_prior = false;
+settings.data_model_energy = true;
+settings.model_data_energy = false;
+settings.silhouette_energy = false;
+
+settings.w2 = 1;
+settings.w4 = 1;
+
+%% Display
+settings.display_covariance = false;
+settings.display_converged = false;
 settings.display_iterations = false;
 settings.write_video = false;
 if (settings.display_converged || settings.display_iterations), 
@@ -48,32 +76,9 @@ if settings.write_video
     video_writer.FrameRate = 5; video_writer.Quality = 100; open(video_writer);
 end
 
-settings.quadratic_one = false;
-settings.quadratic_two = false;
-settings.kalman_like = false;
-settings.batch = true;
-settings.independent = false;
-
-settings.batch_size = 15;
-settings.num_iters = 20;
-
-settings.batch_independent = false;
-settings.batch_online = true;
-settings.batch_online_robust = false;
-settings.batch_online_robust_tau = 1;
-
-settings.shape_prior = false;
-settings.data_model_energy = true;
-settings.model_data_energy = false;
-settings.silhouette_energy = false;
-
-[settings, history] = set_batch_size(settings);
-
-settings.w2 = 1;
-settings.w4 = 1;
-h = [];
-
 %% Tracking
+[settings, history] = set_batch_size(settings);
+h = [];
 for N = 1:settings.num_frames
     %disp(N);
     
@@ -150,7 +155,7 @@ for N = 1:settings.num_frames
         history.x_batch(N, :) = X(indices);
         history.h_batch(N, :) = diag(H);
     end
-    if settings.store_covariance
+    if settings.display_covariance
         history.covariance(N, :, :) = H(end - B - T + 1:end - T,  end - B - T + 1:end - T);
     end
     
@@ -179,6 +184,6 @@ for N = 1:settings.num_frames
     end
 end
 
-if exist('video_writer', 'var'), video_writer.close(); end
+if exist('video_writer', 'var') && ~isempty(video_writer), video_writer.close(); end
 
 

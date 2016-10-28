@@ -22,7 +22,7 @@ for beta_index = beta_indices
     current_ij_importance = zeros(num_runs, 1);
     
     results_history = zeros(num_runs, settings.num_frames, B);
-    if settings.store_covariance
+    if settings.display_covariance
         covariance_history = zeros(num_runs, settings.num_frames, B, B);
     end
     
@@ -42,7 +42,7 @@ for beta_index = beta_indices
                 %% prepare for empirical covariance
                 if (i == j)
                     results_history(run_index, i, :) = Histories{run_index}.x_batch(i, end - B - T + 1:end - T);
-                    if settings.store_covariance
+                    if settings.display_covariance
                         covariance_history(run_index, i, :, :) = Histories{run_index}.covariance(i, :, :);
                     end
                 end
@@ -77,4 +77,8 @@ end
 
 %% Display covariance 1-2
 settings.num_runs = num_runs;
-%display_covariance(settings, results_history, covariance_history, frame_certainty);
+if settings.display_covariance
+    display_covariance(settings, results_history, covariance_history, frame_certainty);
+end
+
+
