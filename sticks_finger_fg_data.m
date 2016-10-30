@@ -82,6 +82,7 @@ if settings.model_data_energy || settings.silhouette_energy
         end
         if isempty(sample_segment_indices), sample_segment_indices = sample_segment_indices'; end
     end
+    
 end
 
 %% stack together
@@ -133,4 +134,14 @@ end
 
 %% Compute Jacobians
 [F, J, H] = jacobian_shape_pose_cpp_wrapper(beta, theta, segments, joints, model_points, data_points, segment_indices, 'cpp');
+
+%% Put weights
+if settings.data_model_energy && (settings.model_data_energy || settings.silhouette_energy)
+    if ~isempty(data_samples)
+        L = size(data_samples, 1);
+        F(end - L + 1:end) = sqrt(settings.w1) * F(end - L + 1:end);
+        J(end - L + 1:end, :) = sqrt(settings.w1) * J(end - L + 1:end, :);
+    end
+end
+
 

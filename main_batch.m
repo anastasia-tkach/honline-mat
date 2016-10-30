@@ -37,16 +37,16 @@ for i = 1:settings.num_frames
 end
 
 %% Algorithm
-settings.quadratic_one = true;
+settings.quadratic_one = false;
 settings.quadratic_two = false;
 settings.kalman_like = false;
-settings.batch = false;
+settings.batch = true;
 settings.independent = false;
 
 settings.batch_size = 2;
 
 %% Parameters
-settings.num_iters = 20;
+settings.num_iters = 100;
 
 settings.batch_independent = false;
 settings.batch_online = true;
@@ -57,8 +57,9 @@ settings.uniform_shape_prior = false;
 settings.constant_sum_shape_prior = false;
 settings.data_model_energy = true;
 settings.model_data_energy = false;
-settings.silhouette_energy = false;
+settings.silhouette_energy = true;
 
+settings.w1 = 0.0001;
 settings.w2 = 1;
 settings.w4 = 1;
 

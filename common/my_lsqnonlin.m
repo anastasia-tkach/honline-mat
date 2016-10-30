@@ -13,7 +13,6 @@ for iter = 1:num_iters + 1
     if E <= E_previous
         
         lambda = lambda / 1.5;
-        %lambdas = lambdas / 1.5;
         E_previous = E;
         F_previous = F;
         J_previous = J;
@@ -22,7 +21,6 @@ for iter = 1:num_iters + 1
         E_history(iter) = E;
     else
         lambda = lambda * 5;
-        %lambdas = lambdas * 5;
         E = E_previous;
         F = F_previous;
         J = J_previous;
@@ -31,6 +29,9 @@ for iter = 1:num_iters + 1
         E_history(iter) = E_history(iter - 1);
     end
 
+    if (lambda > 1e8)
+        break;
+    end
     if iter == num_iters, break; end
     
     delta = - (J' * J + lambda * eye(size(J, 2), size(J, 2))) \ (J' * F);  
