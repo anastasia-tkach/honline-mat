@@ -27,7 +27,7 @@ if settings.batch, title_string = [title_string, '     batch = ', '\color[rgb]{0
 if settings.batch && settings.batch_online_robust, title_string = [title_string, '     \tau = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.batch_online_robust_tau), '\color[rgb]{0.25 0.25 0.25}']; end
 
 if settings.model_data_energy || settings.silhouette_energy
-    title_string = [title_string, '     \omega_2 = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.w1), '\color[rgb]{0.25 0.25 0.25}'];
+    title_string = [title_string, '     \omega_1 = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.w1), '\color[rgb]{0.25 0.25 0.25}'];
 end
 
 title_string = [title_string, '     \omega_2 = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.w2), '\color[rgb]{0.25 0.25 0.25}'];

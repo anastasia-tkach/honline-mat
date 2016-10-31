@@ -11,7 +11,6 @@ for run_index = 1:num_runs
 end
 %%}
 beta_indices = 1:3;
-
 %% Compute statistics
 
 for beta_index = beta_indices
@@ -56,8 +55,8 @@ for beta_index = beta_indices
         end
     end
     
-    %% Set display parameters
-    ylimit = [1.5, 4.5];
+    %% Set display parameters  
+    ylimit = [-1, 7];
     if length(beta_indices) == 1
         v = [(thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4), (thetas_true(:, 2) >= pi/4) .* (thetas_true(:, 3) >= pi/4)];
     end
@@ -69,10 +68,10 @@ for beta_index = beta_indices
     end
     
     %% Display empirical variance
-    display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
+    %display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
     
     %% Display history
-    %display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
+    display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
     
 end
 

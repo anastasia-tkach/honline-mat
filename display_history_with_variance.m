@@ -1,6 +1,8 @@
 function [] = display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ...
     ylimit, settings, N, frame_centrainty, problem_type, beta_indices, beta_index)
 
+chisquare_val = 2.4477;
+
 w = 0.6;
 line_color = [1, 0.7, 0.6];
 point_color = [1.0 0.5 0.3]; 
@@ -66,7 +68,7 @@ for k = 1:N
     
     % results
     yyaxis left;
-    myline([k, means(k, k) + standard_deviations(k, k)], [k, means(k, k) - standard_deviations(k, k)], current_line_color, line_width);
+    myline([k, means(k, k) + chisquare_val * standard_deviations(k, k)], [k, means(k, k) - chisquare_val * standard_deviations(k, k)], current_line_color, line_width);
     mypoint([k, means(k, k)], current_point_color, point_size);
     
     % importance

@@ -1,6 +1,7 @@
 function [] = display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, x_true, ...
     ylimit, settings, N, frame_centrainty, problem_type, beta_indices, beta_index)
 
+chisquare_val = 2.4477;
 w = N * 0.040909;
 offset = 1/N;
 line_color = [1, 0.73, 0.6];
@@ -64,8 +65,8 @@ for j = 1:N
         end
         
         yyaxis left; 
-        myline([j + offset * k, means(j, k) + standard_deviations(j, k)], ...
-            [j + offset * k, means(j, k) - standard_deviations(j, k)], current_line_color, line_width);
+        myline([j + offset * k, means(j, k) + chisquare_val * standard_deviations(j, k)], ...
+            [j + offset * k, means(j, k) - chisquare_val * standard_deviations(j, k)], current_line_color, line_width);
         mypoint([j + offset * k, means(j, k)], current_point_color, point_size);         
         
         if k == 1 && j > 1, myline([j, ylimit(1)], [j, ylimit(2)], [0.88, 0.88, 0.88], 2); end
