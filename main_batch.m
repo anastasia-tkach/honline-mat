@@ -24,8 +24,8 @@ theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/60, pi/60];
 theta_uncertain = [0, 0, 0];
 tact = 3;
-%thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
-thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 150, 1)];
+thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_12, tact, 1);  repmat(theta_uncertain, tact, 1)];
+%thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 150, 1)];
 
 settings.num_frames = size(thetas_true, 1);
 
@@ -46,7 +46,7 @@ settings.independent = false;
 settings.batch_size = 2;
 
 %% Parameters
-settings.num_iters = 100;
+settings.num_iters = 20;
 
 settings.batch_independent = false;
 settings.batch_online = true;
@@ -157,7 +157,16 @@ for N = 1:settings.num_frames
         history.h_batch(N, :) = diag(H);
     end
     if settings.display_covariance
-        history.covariance(N, :, :) = H(end - B - T + 1:end - T,  end - B - T + 1:end - T);
+        
+        %beta_indices = repmat([ones(B, 1); zeros(B, 1)], min(N, settings.batch_size), 1);
+        %H_beta = H(beta_indices == 1, beta_indices == 1);
+        %Sigma_beta = inv(H_beta);
+        %history.covariance(N, :, :) = Sigma_beta(end - B + 1:end, end - B + 1:end);
+        
+        Sigma = inv(H);
+        history.covariance(N, :, :) = Sigma(end - B - T + 1:end - T, end - B  - T + 1:end - T);        
+        
+        %history.covariance(N, :, :) = inv(H_beta(end - B + 1:end, end - B + 1:end));
     end
     
     %% Covariance   

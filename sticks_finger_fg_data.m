@@ -72,11 +72,12 @@ if settings.model_data_energy || settings.silhouette_energy
         k = 1;
         while k <= length(model_samples)
             min_distance = norm(model_samples{k} - data_samples{k});
-            if min_distance < data_radius
+            if min_distance <= data_radius
                 model_samples(k) = [];
                 data_samples(k) = [];
                 sample_segment_indices(k) = [];
             else
+                data_samples{k} = model_samples{k} + (min_distance - data_radius) / min_distance * (data_samples{k} - model_samples{k});
                 k = k + 1;
             end
         end

@@ -28,8 +28,8 @@ for i = 1:length(frame_indices)
     set(gca,'color', color);
     for run_index = 1:settings.num_runs
         mu = squeeze(results_history(run_index, frame_index, 1:2));
-        h = squeeze(covariance_history(run_index, frame_index, 1:2, 1:2));
-        sigma = inv(h);
+        sigma = squeeze(covariance_history(run_index, frame_index, 1:2, 1:2));
+        h = inv(sigma);
         [r_ellipse] = get_covarince_elipse(sigma, chisquare_val);
         plot(r_ellipse(:,1) + mu(1), r_ellipse(:,2) + mu(2), '-', 'lineWidth', 2, 'color',  [228, 244, 223]/255);
         
