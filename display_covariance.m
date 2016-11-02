@@ -6,18 +6,19 @@ mean_mu = zeros(2, 1);
 uncertain_background_color = [1; 0.98; 0.95];
 certain_background_color = [0.96; 1; 0.93];
 
-figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.8, 0.4]); hold on;
+figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.8, 0.43]); hold on;
 set(gca,'position', [0.05 0.05 0.95 0.95], 'units','normalized');
 shifts = 0.02 + [0. 0.2, 0.4, 0.6, 0.8];
 
-frame_indices = [2, 5, 8, 11, 14];
+frame_indices = [1, 2, 3];
+%frame_indices = [2, 5, 7, 11, 13];
 for i = 1:length(frame_indices)
     frame_index = frame_indices(i);
     
     %% set up subplot       
     %h = subplot(1, 5, i); hold on; p = get(h, 'pos'); disp(p);
     %0.1300    0.1100    0.1237    0.8150
-    h = subplot('Position', [shifts(i), 0.05, 0.16, 0.95]); hold on; axis equal;
+    h = subplot('Position', [shifts(i), 0.05, 0.16, 0.85]); hold on; axis equal;
     
     %% display
     if sum(frame_certainty(frame_index, :)) >= 1
@@ -52,8 +53,11 @@ for i = 1:length(frame_indices)
     plot(r_ellipse(:,1) + mean_data(1), r_ellipse(:,2) + mean_data(2), '-', 'lineWidth', 2, 'color', [255, 173, 135]/255);
     
     %% plot parameters
-    xlim([-1, 7]); ylim([-1, 7]); title(['frame ', num2str(frame_index)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
+    xlim([-1, 7]); ylim([-1, 7]); title(['frame ', num2str(frame_index)], 'FontWeight','Normal'); set(gca, 'fontSize', 10); set(gca,'fontname','Cambria');
     xlabel('\beta_1'); if i > 1, ylabel('\beta_2'); end
 end
 
+%% Display title
+h = display_algorithm_title(settings, 'sticks_finger');
+set(h,'Position', [-18, 8.1,  0]);
 

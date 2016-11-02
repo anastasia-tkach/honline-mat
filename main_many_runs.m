@@ -2,7 +2,7 @@ tic
 %%{
 clear; clc;
 rng default;
-num_runs = 100;
+num_runs = 1;
 Histories = cell(num_runs, 1);
 for run_index = 1:num_runs
     disp(run_index);

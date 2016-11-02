@@ -5,7 +5,6 @@ B = 3;  T = 3;
 %% Recursive term
 if ~isempty(h_)
     W3 = h_(B + T + 1:B + T + B, B + T + 1:B + T + B);
-    W3 = diag(diag(W3));
 else
     W3 = zeros(B, B);
 end

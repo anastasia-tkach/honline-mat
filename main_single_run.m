@@ -1,8 +1,8 @@
-% clear; clc; 
+% clear; clc;
 % close all;
 % rng default;
 global video_writer;
-    
+
 %% Parameters
 settings.num_samples = 10;
 B = 3 ;
@@ -24,8 +24,9 @@ theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/60, pi/60];
 theta_uncertain = [0, 0, 0];
 tact = 3;
-thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_12, tact, 1);  repmat(theta_uncertain, tact, 1)];
-%thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 150, 1)];
+thetas_true = [repmat(theta_certain_12, 2, 1); repmat(theta_uncertain, 1, 1)];
+% thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1);  repmat(theta_uncertain, tact, 1)];
+% thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 150, 1)];
 
 settings.num_frames = size(thetas_true, 1);
 
@@ -35,7 +36,7 @@ for i = 1:settings.num_frames
     X_init((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = beta_init;
     X_init((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
 end
-
+ 
 %% Algorithm
 settings.quadratic_one = false;
 settings.quadratic_two = false;
@@ -60,15 +61,15 @@ settings.model_data_energy = false;
 settings.silhouette_energy = false;
 
 settings.w1 = 1;
-settings.w2 = 1;
+settings.w2 = 0;
 settings.w4 = 1;
 
 %% Display
-settings.display_covariance = true;
+settings.display_covariance = false;
 settings.display_converged = false;
 settings.display_iterations = false;
 settings.write_video = false;
-if (settings.display_converged || settings.display_iterations), 
+if (settings.display_converged || settings.display_iterations),
     figure('units', 'normalized', 'outerposition', [0.25, 0.275, 0.45, 0.7]);
     axis off; axis equal; hold on;
 end
@@ -156,26 +157,17 @@ for N = 1:settings.num_frames
         history.x_batch(N, :) = X(indices);
         history.h_batch(N, :) = diag(H);
     end
-    if settings.display_covariance
-        
-        %beta_indices = repmat([ones(B, 1); zeros(B, 1)], min(N, settings.batch_size), 1);
-        %H_beta = H(beta_indices == 1, beta_indices == 1);
-        %Sigma_beta = inv(H_beta);
-        %history.covariance(N, :, :) = Sigma_beta(end - B + 1:end, end - B + 1:end);
-        
-        Sigma = inv(H);
-        history.covariance(N, :, :) = Sigma(end - B - T + 1:end - T, end - B  - T + 1:end - T);        
-        
-        %history.covariance(N, :, :) = inv(H_beta(end - B + 1:end, end - B + 1:end));
+    if settings.display_covariance     
+        history.covariance(N, :, :) = get_last_frame_covariance(H, settings, N);
     end
     
-    %% Covariance   
+    %% Covariance
     %draw_covariance_matrix(X(end - B - T  + 1:end - B - T  + 2), inv(H(end - B - T  + 1:end - B - T  + 2, end - B - T  + 1:end - B - T  + 2)), 0);
     %xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
     
     %% Display
     if (settings.display_converged)
-        beta = X(end - (B + T) + 1:end - T);        
+        beta = X(end - (B + T) + 1:end - T);
         theta = X(end - T + 1:end);
         data_points = frames{N};
         [segments0, joints] = segments_and_joints_2D();

@@ -1,4 +1,4 @@
-function [] = display_algorithm_title(settings, problem_type)
+function [h] = display_algorithm_title(settings, problem_type)
 
 set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
 
@@ -41,5 +41,5 @@ if strcmp(problem_type, 'sticks_finger')
 end
 
 %% Display
-title(title_string, 'interpreter','tex', 'FontWeight','Normal', 'fontsize', 16);
+h = title(title_string, 'interpreter','tex', 'FontWeight','Normal', 'fontsize', 16);
 
