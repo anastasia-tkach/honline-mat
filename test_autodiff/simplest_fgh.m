@@ -1,4 +1,4 @@
-function [F, J, H] = test_function(x, D)
+function [F, J, H] = simplest_fgh(x, D)
 
 m = size(x, 1);
 A = reshape(D(1:m * m), m, m);

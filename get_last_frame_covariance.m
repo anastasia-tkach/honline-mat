@@ -17,6 +17,7 @@ if (beta_only_covariance)
     beta_indices = repmat([ones(B, 1); zeros(B, 1)], min(N, settings.batch_size), 1);
     H_beta = H(beta_indices == 1, beta_indices == 1);
     Sigma_beta = inv(H_beta);
+    %Sigma_beta = Sigma_beta / norm(Sigma_beta);
       
     if (invert_block)
         sigma_last_frame = inv(H_beta(end - B + 1:end, end - B + 1:end));

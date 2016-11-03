@@ -1,4 +1,14 @@
-function [r_ellipse, eigenval, eigenvec] = get_covarince_elipse(sigma, chisquare_val)
+function [ellipse_points, eigenval, eigenvec, ok] = get_covarince_elipse(sigma, chisquare_val)
+
+ok = true;
+
+if any(isinf(sigma))
+    ok = false;
+    ellipse_points = [];
+    eigenval = [];
+    eigenvec = [];
+    return;
+end
 
 [eigenvec, eigenval] = eig(sigma);
 eigenval = diag(eigenval);
@@ -21,4 +31,4 @@ ellipse_y_r = b*sin(linspace(0,2*pi));
 
 %Define a rotation matrix
 R = [ cos(phi) sin(phi); -sin(phi) cos(phi) ];
-r_ellipse = [ellipse_x_r;ellipse_y_r]' * R;
+ellipse_points = [ellipse_x_r;ellipse_y_r]' * R;

@@ -10,8 +10,8 @@ figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.8, 0.43]); hold on;
 set(gca,'position', [0.05 0.05 0.95 0.95], 'units','normalized');
 shifts = 0.02 + [0. 0.2, 0.4, 0.6, 0.8];
 
-frame_indices = [1, 2, 3];
-%frame_indices = [2, 5, 7, 11, 13];
+%frame_indices = 1:settings.num_frames;
+frame_indices = [2, 5, 7, 11, 13];
 for i = 1:length(frame_indices)
     frame_index = frame_indices(i);
     
@@ -31,8 +31,10 @@ for i = 1:length(frame_indices)
         mu = squeeze(results_history(run_index, frame_index, 1:2));
         sigma = squeeze(covariance_history(run_index, frame_index, 1:2, 1:2));
         h = inv(sigma);
-        [r_ellipse] = get_covarince_elipse(sigma, chisquare_val);
-        plot(r_ellipse(:,1) + mu(1), r_ellipse(:,2) + mu(2), '-', 'lineWidth', 2, 'color',  [228, 244, 223]/255);
+        [ellipse_points, ok] = get_covarince_elipse(sigma, chisquare_val);
+        if ok
+            plot(ellipse_points(:,1) + mu(1), ellipse_points(:,2) + mu(2), '-', 'lineWidth', 2, 'color',  [228, 244, 223]/255);
+        end
         
         mean_h = mean_h + h;
         mean_mu = mean_mu + mu;
@@ -41,19 +43,20 @@ for i = 1:length(frame_indices)
     mean_h = mean_h / settings.num_runs;
     mean_mu = mean_mu / settings.num_runs;
     mean_sigma = inv(h);
-    [r_ellipse] = get_covarince_elipse(mean_sigma, chisquare_val);
-    plot(r_ellipse(:,1) + mean_mu(1), r_ellipse(:,2) + mean_mu(2), '-', 'lineWidth', 2, 'color', [136, 187, 119]/255);
+    [ellipse_points] = get_covarince_elipse(mean_sigma, chisquare_val);
+    plot(ellipse_points(:,1) + mean_mu(1), ellipse_points(:,2) + mean_mu(2), '-', 'lineWidth', 2, 'color', [136, 187, 119]/255);
     
     %% compute data covariance
     data = squeeze(results_history(:, frame_index, 1:2));
     mean_data = mean(data);
     data = data - repmat(mean_data, size(data, 1), 1);
     sigma_data = cov(data);
-    [r_ellipse] = get_covarince_elipse(sigma_data, chisquare_val);
-    plot(r_ellipse(:,1) + mean_data(1), r_ellipse(:,2) + mean_data(2), '-', 'lineWidth', 2, 'color', [255, 173, 135]/255);
+    [ellipse_points] = get_covarince_elipse(sigma_data, chisquare_val);
+    plot(ellipse_points(:,1) + mean_data(1), ellipse_points(:,2) + mean_data(2), '-', 'lineWidth', 2, 'color', [255, 173, 135]/255);
     
     %% plot parameters
-    xlim([-1, 7]); ylim([-1, 7]); title(['frame ', num2str(frame_index)], 'FontWeight','Normal'); set(gca, 'fontSize', 10); set(gca,'fontname','Cambria');
+    xlim([-1, 7]); ylim([-1, 7]); 
+    title(['frame ', num2str(frame_index)], 'FontWeight','Normal'); set(gca, 'fontSize', 10); set(gca,'fontname','Cambria');
     xlabel('\beta_1'); if i > 1, ylabel('\beta_2'); end
 end
 

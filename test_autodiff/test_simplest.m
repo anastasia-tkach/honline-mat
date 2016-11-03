@@ -1,3 +1,4 @@
+rng default;
 clear; clc;
 m = 4;
 x = rand(m, 1);
@@ -5,7 +6,7 @@ A = rand(m, m);
 B = rand(1, m);
 c = rand(1, 1);
 D = [A(:); B'; c];
-au_autodiff_generate(@test_function, x, D, 'E:/OneDrive/EPFL/Code/honline-mat/test_autodiff/au_autodiff_test.cpp', 'HESSIAN=1');
+au_autodiff_generate(@simplest_fgh, x, D, 'E:/OneDrive/EPFL/Code/honline-mat/test_autodiff/au_autodiff_test.cpp', 'HESSIAN=1');
 
 [V] = au_autodiff_test(x, D, 2);
 j_ = V(1:m);
@@ -20,6 +21,6 @@ for  i = m:-1:1
     k = k + i;
 end
 
-[F, J, H] = test_function(x, D);
+[F, J, H] = simplest_fgh(x, D);
 
 

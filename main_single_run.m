@@ -24,8 +24,8 @@ theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/60, pi/60];
 theta_uncertain = [0, 0, 0];
 tact = 3;
-thetas_true = [repmat(theta_certain_12, 2, 1); repmat(theta_uncertain, 1, 1)];
-% thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1);  repmat(theta_uncertain, tact, 1)];
+thetas_true = [repmat(theta_certain_1, 1, 1); repmat(theta_certain_1, 1, 1); repmat(theta_certain_2, 1, 1)];
+%thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
 % thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 150, 1)];
 
 settings.num_frames = size(thetas_true, 1);
@@ -36,13 +36,13 @@ for i = 1:settings.num_frames
     X_init((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = beta_init;
     X_init((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
 end
- 
+
 %% Algorithm
 settings.quadratic_one = false;
 settings.quadratic_two = false;
 settings.kalman_like = false;
-settings.batch = true;
-settings.independent = false;
+settings.batch = false;
+settings.independent = true;
 
 settings.batch_size = 2;
 
@@ -61,11 +61,11 @@ settings.model_data_energy = false;
 settings.silhouette_energy = false;
 
 settings.w1 = 1;
-settings.w2 = 0;
+settings.w2 = 1;
 settings.w4 = 1;
 
 %% Display
-settings.display_covariance = false;
+settings.display_covariance = true;
 settings.display_converged = false;
 settings.display_iterations = false;
 settings.write_video = false;
@@ -130,8 +130,8 @@ for N = 1:settings.num_frames
     %% Separate optimization
     if (settings.independent)
         X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
-        [X, j] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings), X, settings.num_iters);
-        H = j' * j;
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings), X, settings.num_iters);
+        H = J' * J;
     end
     
     %% Batch optimization
@@ -148,6 +148,45 @@ for N = 1:settings.num_frames
         H = J' * J;
     end
     
+    %% Examine Jacobian
+    %{
+    beta_indices = repmat([ones(B, 1); zeros(B, 1)], min(N, settings.batch_size), 1);
+    
+    J1 = J(1:min(N, settings.batch_size) * settings.num_samples * 3, :);
+    JJ1 = J1' * J1;
+    JJ1 = JJ1(beta_indices == 1, beta_indices == 1);
+    
+    if (settings.batch || settings.quadratic_one)
+        if (N == 2  || (N > 1 && settings.batch_independent))
+            J2 = J(min(N, settings.batch_size) * settings.num_samples * 3 + 1:min(N, settings.batch_size) * settings.num_samples * 3 + 3, :);
+            JJ2 = J2' * J2;
+            JJ2 = JJ2(beta_indices == 1, beta_indices == 1);
+            %figure; imagesc(JJ2); axis equal; colorbar;
+        end
+        if (N > 2 && ~settings.batch_independent)
+            J2 = J(min(N, settings.batch_size) * settings.num_samples * 3 + 1:min(N, settings.batch_size) * settings.num_samples * 3 + 6, :);
+            JJ2 = J2' * J2;
+            JJ2 = JJ2(beta_indices == 1, beta_indices == 1);
+            %figure; imagesc(JJ2); axis equal; colorbar;
+        end
+    end
+    if (settings.uniform_shape_prior)
+        J4 = J(min(N, settings.batch_size) * settings.num_samples * 3 + 7:end, :);
+        JJ4 = J4' * J4;
+        JJ4 = JJ4(beta_indices == 1, beta_indices == 1);
+        %figure; imagesc(JJ4); axis equal; colorbar;
+    end
+    
+    JJ = J' * J;
+    JJ = JJ(beta_indices == 1, beta_indices == 1);
+    %figure; imagesc(JJ); axis equal; colorbar; %caxis([cmin cmax]);
+    
+    mu = X(end - B - T + 1:end - 1 - T);
+    sigma = inv(JJ);
+    [r_ellipse] = get_covarince_elipse(sigma(1:2, 1:2), 2.4477);
+    figure; plot(r_ellipse(:,1) + mu(1), r_ellipse(:,2) + mu(2), '-', 'lineWidth', 2, 'color',  [228, 244, 223]/255); axis equal;
+    %}
+    
     %% Save new history
     if N <= settings.batch_size
         history.x_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); X];
@@ -157,7 +196,7 @@ for N = 1:settings.num_frames
         history.x_batch(N, :) = X(indices);
         history.h_batch(N, :) = diag(H);
     end
-    if settings.display_covariance     
+    if settings.display_covariance
         history.covariance(N, :, :) = get_last_frame_covariance(H, settings, N);
     end
     
