@@ -41,8 +41,8 @@ end
 settings.quadratic_one = false;
 settings.quadratic_two = false;
 settings.kalman_like = false;
-settings.batch = false;
-settings.independent = true;
+settings.batch = true;
+settings.independent = false;
 
 settings.batch_size = 2;
 
@@ -54,7 +54,7 @@ settings.batch_online = true;
 settings.batch_online_robust = false;
 settings.batch_online_robust_tau = 1;
 
-settings.uniform_shape_prior = false;
+settings.uniform_shape_prior = true;
 settings.constant_sum_shape_prior = false;
 settings.data_model_energy = true;
 settings.model_data_energy = false;
@@ -68,6 +68,8 @@ settings.w4 = 1;
 settings.display_covariance = true;
 settings.display_converged = false;
 settings.display_iterations = false;
+settings.display_jacobian = false;
+
 settings.write_video = false;
 if (settings.display_converged || settings.display_iterations),
     figure('units', 'normalized', 'outerposition', [0.25, 0.275, 0.45, 0.7]);
@@ -146,47 +148,8 @@ for N = 1:settings.num_frames
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, settings), X, settings.num_iters);
         H = J' * J;
-    end
-    
-    %% Examine Jacobian
-    %{
-    beta_indices = repmat([ones(B, 1); zeros(B, 1)], min(N, settings.batch_size), 1);
-    
-    J1 = J(1:min(N, settings.batch_size) * settings.num_samples * 3, :);
-    JJ1 = J1' * J1;
-    JJ1 = JJ1(beta_indices == 1, beta_indices == 1);
-    
-    if (settings.batch || settings.quadratic_one)
-        if (N == 2  || (N > 1 && settings.batch_independent))
-            J2 = J(min(N, settings.batch_size) * settings.num_samples * 3 + 1:min(N, settings.batch_size) * settings.num_samples * 3 + 3, :);
-            JJ2 = J2' * J2;
-            JJ2 = JJ2(beta_indices == 1, beta_indices == 1);
-            %figure; imagesc(JJ2); axis equal; colorbar;
-        end
-        if (N > 2 && ~settings.batch_independent)
-            J2 = J(min(N, settings.batch_size) * settings.num_samples * 3 + 1:min(N, settings.batch_size) * settings.num_samples * 3 + 6, :);
-            JJ2 = J2' * J2;
-            JJ2 = JJ2(beta_indices == 1, beta_indices == 1);
-            %figure; imagesc(JJ2); axis equal; colorbar;
-        end
-    end
-    if (settings.uniform_shape_prior)
-        J4 = J(min(N, settings.batch_size) * settings.num_samples * 3 + 7:end, :);
-        JJ4 = J4' * J4;
-        JJ4 = JJ4(beta_indices == 1, beta_indices == 1);
-        %figure; imagesc(JJ4); axis equal; colorbar;
-    end
-    
-    JJ = J' * J;
-    JJ = JJ(beta_indices == 1, beta_indices == 1);
-    %figure; imagesc(JJ); axis equal; colorbar; %caxis([cmin cmax]);
-    
-    mu = X(end - B - T + 1:end - 1 - T);
-    sigma = inv(JJ);
-    [r_ellipse] = get_covarince_elipse(sigma(1:2, 1:2), 2.4477);
-    figure; plot(r_ellipse(:,1) + mu(1), r_ellipse(:,2) + mu(2), '-', 'lineWidth', 2, 'color',  [228, 244, 223]/255); axis equal;
-    %}
-    
+    end    
+   
     %% Save new history
     if N <= settings.batch_size
         history.x_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); X];
@@ -196,15 +159,12 @@ for N = 1:settings.num_frames
         history.x_batch(N, :) = X(indices);
         history.h_batch(N, :) = diag(H);
     end
-    if settings.display_covariance
-        history.covariance(N, :, :) = get_last_frame_covariance(H, settings, N);
-    end
     
-    %% Covariance
-    %draw_covariance_matrix(X(end - B - T  + 1:end - B - T  + 2), inv(H(end - B - T  + 1:end - B - T  + 2, end - B - T  + 1:end - B - T  + 2)), 0);
-    %xlim([-4, 4]); ylim([-4, 4]); title(['frame ', num2str(N)]); set(gca, 'fontSize', 12); set(gca,'fontname','Cambria');
-    
+    history = get_last_frame_covariance(H, history, settings, N);
+   
     %% Display
+    display_jacobian(X, J, settings, N);
+    
     if (settings.display_converged)
         beta = X(end - (B + T) + 1:end - T);
         theta = X(end - T + 1:end);

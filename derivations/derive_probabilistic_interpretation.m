@@ -1,7 +1,8 @@
 rng default;
-clc; clear; %close all;
+%clc; clear; close all;
 options = optimoptions(@lsqnonlin, 'Algorithm', 'levenberg-marquardt', 'display','off');
 R = @(theta) [cos(theta), -sin(theta); sin(theta), cos(theta)];
+Q = ones(1, 2); W4 = (eye(2, 2) -  1/2 * (Q' * Q));
 
 chisquare_val = 2.4477;
 n = 2;
@@ -20,10 +21,11 @@ X0 = mvnrnd(mu1, sigma1, num_runs);
 X1 = zeros(num_runs, n);
 X2 = zeros(num_runs, n);
 
-w0 = 0;
+w0 = 1;
 w1 = 1;
 w2 = 1;
 w3 = 1;
+w4 = 1;
 
 for run_index = 1:num_runs
     
@@ -34,7 +36,9 @@ for run_index = 1:num_runs
     F = @(xx)  [sqrt(w0) * (xx(1:2) - x0); ...
         sqrt(w1) * inv(sqrtm(sigma1)) * (xx(1:2) -  mu1); 
         sqrt(w2) * (xx(1:2) - xx(3:4)); ...
-        sqrt(w3) * inv(sqrtm(sigma2)) * (xx(3:4) -  mu2)];
+        sqrt(w3) * inv(sqrtm(sigma2)) * (xx(3:4) -  mu2); ...
+        sqrt(w4) * W4 * xx(3:4);
+        ];
     xx = lsqnonlin(F, xx, [], [], options);
     
     X1(run_index, :) = xx(1:2)';

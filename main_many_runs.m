@@ -1,4 +1,4 @@
-tic
+
 %%{
 clear; clc;
 rng default;
@@ -81,4 +81,5 @@ if settings.display_covariance
     display_covariance(settings, results_history, covariance_history, frame_certainty);
 end
 
-toc
+%% Probabilistic interpretation
+%simulate_cost_function(settings, results_history, covariance_history);
