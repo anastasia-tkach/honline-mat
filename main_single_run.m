@@ -24,7 +24,8 @@ theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/60, pi/60];
 theta_uncertain = [0, 0, 0];
 tact = 3;
-thetas_true = [repmat(theta_certain_1, 1, 1); repmat(theta_certain_1, 1, 1); repmat(theta_certain_2, 1, 1)];
+%thetas_true = [repmat(theta_certain_1, 1, 1); repmat(theta_certain_1, 1, 1); repmat(theta_certain_2, 1, 1)];
+thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
 %thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
 % thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 150, 1)];
 
@@ -39,9 +40,9 @@ end
 
 %% Algorithm
 settings.quadratic_one = false;
-settings.quadratic_two = false;
+settings.quadratic_two = true;
 settings.kalman_like = false;
-settings.batch = true;
+settings.batch = false;
 settings.independent = false;
 
 settings.batch_size = 2;
@@ -50,11 +51,13 @@ settings.batch_size = 2;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
-settings.batch_online = true;
+settings.batch_online = false;
 settings.batch_online_robust = false;
 settings.batch_online_robust_tau = 1;
+settings.quadratic_two_maximization = false;
+settings.quadratic_two_marginalization = true;
 
-settings.uniform_shape_prior = true;
+settings.uniform_shape_prior = false;
 settings.constant_sum_shape_prior = false;
 settings.data_model_energy = true;
 settings.model_data_energy = false;
@@ -108,7 +111,14 @@ for N = 1:settings.num_frames
         
         H = zeros(2 * (B + T), 2 * (B + T));
         a = h(1:B, 1:B); b = h(1:B, B + T + 1:B + T + B); c = h(B + T + 1:B + T + B, 1:B); d = h(B + T + 1:B + T + B, B + T + 1:B + T + B);
-        H(B + T + 1:B + T + B, B + T + 1:B + T + B) = d - c * inv(a) * b;
+        
+        if (settings.quadratic_two_marginalization)
+            H(B + T + 1:B + T + B, B + T + 1:B + T + B) = d - c * inv(a) * b; 
+        end
+        if (settings.quadratic_two_maximization)
+            H(B + T + 1:B + T + B, B + T + 1:B + T + B) = d;
+        end
+            
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
     end
     

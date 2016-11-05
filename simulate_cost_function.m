@@ -8,17 +8,22 @@ load([input_path, sequence_name, '/covariance_history']);
 load([input_path, sequence_name, '/results_history_batch']);
 load([input_path, sequence_name, '/results_history_batch_independent']);
 load([input_path, sequence_name, '/results_history_uniform']);
+load([input_path, sequence_name, '/results_history_kalman']);
+
+settings.batch = false;
+settings.kalman_like = false;
+settings.quadratic = true;
 
 options = optimoptions(@lsqnonlin, 'Algorithm', 'levenberg-marquardt', 'display','off');
 R = @(theta) [cos(theta), -sin(theta); sin(theta), cos(theta)];
 chisquare_val = 2.4477;
 Q = ones(1, 2); W4 = (eye(2, 2) -  1/2 * (Q' * Q));
 n = 2;
-w0 = 1;
+w0 = 0;
 w1 = 1;
 w2 = 1;
 w3 = 1;
-w4 = 1;
+w4 = 0;
 zero_frame_index = 1;
 first_frame_index = 2;
 second_frame_index = 3;
@@ -29,13 +34,18 @@ figure; hold on; axis equal;
 X0 = squeeze(results_history(:, zero_frame_index, 1:2));
 X1 = zeros(num_runs, n);
 X2 = zeros(num_runs, n);
-%X_test = squeeze(results_history_batch(:, second_frame_index, 1:2));
+X_test = squeeze(results_history_batch(:, second_frame_index, 1:2));
 %X_test = squeeze(results_history_batch_independent(:, second_frame_index, 1:2));
-X_test = squeeze(results_history_uniform(:, second_frame_index, 1:2));
+%X_test = squeeze(results_history_uniform(:, second_frame_index, 1:2));
+%X_test = squeeze(results_history_kalman(:, second_frame_index, 1:2));
 
 invalid_indices = [];
 for run_index = 1:settings.num_runs
     disp(run_index);
+    
+    sigma0 = squeeze(covariance_history(run_index, zero_frame_index, 1:2, 1:2));
+    mu0 = squeeze(results_history(run_index, zero_frame_index, 1:2));
+    
     sigma1 = squeeze(covariance_history(run_index, first_frame_index, 1:2, 1:2));
     mu1 = squeeze(results_history(run_index, first_frame_index, 1:2));
     
@@ -48,15 +58,43 @@ for run_index = 1:settings.num_runs
     end
     
     x = mu1;
-    x0 = X0(run_index, :)';
     xx = [x; x];
     
-    F = @(xx)  [sqrt(w0) * (xx(1:2) - x0); ...
-        sqrt(w1) * inv(sqrtm(sigma1)) * (xx(1:2) -  mu1); ...
-        sqrt(w2) * (xx(1:2) - xx(3:4)); ...
-        sqrt(w3) * inv(sqrtm(sigma2)) * (xx(3:4) -  mu2); ...
-        sqrt(w4) * W4 * xx(3:4);
-    ];
+    %% batch
+    if settings.batch
+        F = @(xx)  [...
+            sqrt(w0) * (xx(1:2) - mu0); ...
+            sqrt(w1) * inv(sqrtm(sigma1)) * (xx(1:2) -  mu1); ...
+            sqrt(w2) * (xx(1:2) - xx(3:4)); ...
+            sqrt(w3) * inv(sqrtm(sigma2)) * (xx(3:4) -  mu2); ...
+            sqrt(w4) * W4 * xx(3:4);
+            ];
+    end
+    
+    %% kalman
+    if settings.kalman_like
+        F = @(xx)  [...
+            inv(sqrtm(sigma0)) * (xx(3:4) - mu1); ...
+            inv(sqrtm(sigma1)) * (xx(3:4) - mu1); ...
+            inv(sqrtm(sigma2)) * (xx(3:4) - mu2);
+            ];
+    end
+    
+    %% quadratic
+    if settings.quadratic
+        F = @(xx)  [...
+            (xx(1:2) -  mu1); ...
+            inv(sqrtm(sigma1)) * (xx(1:2) -  mu1); ...
+            xx(1:2) - xx(3:4); ...
+            inv(sqrtm(sigma2)) * (xx(3:4) -  mu2); ...
+            ];
+    end
+    
+    
+    %% quadratic
+    
+    
+    %% optimize
     xx = lsqnonlin(F, xx, [], [], options);
     
     X1(run_index, :) = xx(1:2)';
@@ -73,9 +111,11 @@ for run_index = 1:settings.num_runs
     plot(ellipse_points(:,1) + mu2(1), ellipse_points(:,2) + mu2(2), '-', 'lineWidth', 2, 'color', [185, 215, 174]/255);
     
     % connecting distribution
-    sigma12 = inv(sqrtm(w2 * eye(n, n)));
-    [ellipse_points] = get_covarince_elipse(sigma12, chisquare_val);
-    plot(ellipse_points(:,1) + X1(1, 1), ellipse_points(:,2) + X1(1, 2), '-', 'lineWidth', 2, 'color', [0.8, 0.8, 0.8]);
+    if settings.batch
+        sigma12 = inv(sqrtm(w2 * eye(n, n)));
+        [ellipse_points] = get_covarince_elipse(sigma12, chisquare_val);
+        plot(ellipse_points(:,1) + X1(1, 1), ellipse_points(:,2) + X1(1, 2), '-', 'lineWidth', 2, 'color', [0.8, 0.8, 0.8]);
+    end
 end
 
 %% remove invalind inidices
@@ -91,7 +131,7 @@ X_test(invalid_indices, :) = [];
 scatter(X2(:, 1), X2(:, 2), 20, [34, 177, 76]/255, 'o', 'filled');
 
 %% plot X_test
-scatter(X_test(:, 1), X_test(:, 2), 20, 'r', 'o', 'filled');
+%scatter(X_test(:, 1), X_test(:, 2), 20, 'r', 'o', 'filled');
 
 
 xlim([-1, 7]); ylim([-1, 7]);

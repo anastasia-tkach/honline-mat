@@ -2,11 +2,10 @@ function [F, J, h] = sticks_finger_fg_laplace_approx(xx, x_0, segments0, joints,
 
 B = 3;  T = 3;
 M = B + T;
-small_weight = 1e-7;
 num_data = length(data_points);
 
 %% Data term
-[F1, dF1_dx2, ddF1_dx2_dx2] = sticks_finger_fg_data(xx(M + 1:2 * M), segments0, joints, data_points);
+[F1, dF1_dx2, ddF1_dx2_dx2] = sticks_finger_fg_data(xx(M + 1:2 * M), segments0, joints, data_points, settings);
 
 % jacobian
 dF1 = zeros(num_data, 2 * M);
@@ -36,16 +35,13 @@ else
     c = h_(M + 1:M + B, 1:B);
     d = h_(M + 1:M + B, M + 1:M + B);
     
-    %a = h_(1:B, 1:B);
-    %b = h_(1:B, B + 1:2 * B);
-    %c = h_(B + 1:2 * B, 1:B);
-    %d = h_(B + 1:2 * B, B + 1:2 * B);
-    
-    ddQ_dx2_dx2 = d - c * inv(a) * b;
-    
-    %ddQ_dx2_dx2 = d - 4 * w2 * w2 * inv(a);
-    
-    %ddQ_dx2_dx2 = d;
+    if (settings.quadratic_two_marginalization)
+        ddQ_dx2_dx2 = d - c * inv(a) * b;
+    end
+    if (settings.quadratic_two_maximization)
+        ddQ_dx2_dx2 = d;
+    end
+
     ddQ_dx2_dx2_sqrt = real(sqrtm(ddQ_dx2_dx2));
     
     Q = ddQ_dx2_dx2_sqrt * (xx(1:B) - x_0(1:B));
@@ -63,16 +59,17 @@ H = [ddQ; ddF1; ddF2];
 df = F' * F;
 j = 2 * F' * J;
 %h = hessian_for_scalar_objective(F, J, H);
-
 h = 2 * J' * J;
 
-% h = 2 * (dQ(:, [1:B, M + 1:M + B])' * dQ(:, [1:B, M + 1:M + B]) + dF1(:, [1:B, M + 1:M + B])' * dF1(:, [1:B, M + 1:M + B]) + dF2(:, [1:B, M + 1:M + B])' * dF2(:, [1:B, M + 1:M + B]));
-%
-% a = 2 * dQ(:, 1:B)' * dQ(:, 1:B)' + 2 * w2 * eye(B, B);
-% d = 2 * dF1(:, M + 1:M + B)' *  dF1(:, M + 1:M + B) + 2 * w2 * eye(B, B);
-% b = -2 * w2 * eye(B, B);
-% c = -2 * w2 * eye(B, B);
-% h = [a, b; c, d];
+%% Expression for h
+%{
+h = 2 * (dQ(:, [1:B, M + 1:M + B])' * dQ(:, [1:B, M + 1:M + B]) + dF1(:, [1:B, M + 1:M + B])' * dF1(:, [1:B, M + 1:M + B]) + dF2(:, [1:B, M + 1:M + B])' * dF2(:, [1:B, M + 1:M + B]));
+a = 2 * dQ(:, 1:B)' * dQ(:, 1:B)' + 2 * settings.w2 * eye(B, B);
+d = 2 * dF1(:, M + 1:M + B)' *  dF1(:, M + 1:M + B) + 2 * settings.w2 * eye(B, B);
+b = -2 * settings.w2 * eye(B, B);
+c = -2 * settings.w2 * eye(B, B);
+h = [a, b; c, d];
+%}
 
 %% Compare with quadratic-one
 %{

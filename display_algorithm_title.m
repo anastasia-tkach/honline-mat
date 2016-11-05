@@ -15,6 +15,16 @@ if settings.batch == true && settings.batch_online_robust == true, algorithm_nam
 
 title_string = ['\color[rgb]{0.9 0.4 0.3}', algorithm_name, '\color[rgb]{0.25 0.25 0.25}'];
 
+%% Quadratic type
+if settings.quadratic_two
+    if settings.quadratic_two_marginalization
+        title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     marginalization', '\color[rgb]{0.25 0.25 0.25}']; 
+    end
+    if settings.quadratic_two_maximization
+        title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     maximization', '\color[rgb]{0.25 0.25 0.25}']; 
+    end
+end
+
 %% Data energy
 if settings.data_model_energy && ~settings.model_data_energy && ~settings.silhouette_energy, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     d2m', '\color[rgb]{0.25 0.25 0.25}']; end
 if settings.data_model_energy && settings.model_data_energy && ~settings.silhouette_energy, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     d2m & m2d', '\color[rgb]{0.25 0.25 0.25}']; end

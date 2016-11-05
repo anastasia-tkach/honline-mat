@@ -39,3 +39,28 @@ end
 if active_algorithms_count > 1
     error('TWO ACTIVE ALGORITHMS');
 end
+
+%% Check if only one type of batch is set to true
+
+if settings.batch == true
+    if ~settings.batch_independent && ~settings.batch_online && ~settings.batch_online_robust;
+        error('BATCH TYPE IS NOT SET');
+    end
+    if (settings.batch_independent && settings.batch_online) || ...
+            (settings.batch_independent && settings.batch_online_robust) || ...
+            (settings.batch_online && settings.batch_online_robust)
+        error('TWO BATCH TYPES');
+    end
+end
+
+%% Check if only one type of quadratic is set to true
+
+if settings.quadratic_two == true
+    if ~settings.quadratic_two_maximization && ~settings.quadratic_two_marginalization
+        error('QUADRATIC TYPE IS NOT SET');
+    end
+    if settings.quadratic_two_maximization && settings.quadratic_two_marginalization
+        error('TWO QUADRATIC TYPES');
+    end
+end
+
