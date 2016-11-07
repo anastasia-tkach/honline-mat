@@ -10,9 +10,12 @@ figure('units', 'normalized', 'outerposition', [0.1, 0.3, 0.8, 0.43]); hold on;
 set(gca,'position', [0.05 0.05 0.95 0.95], 'units','normalized');
 shifts = 0.02 + [0. 0.2, 0.4, 0.6, 0.8];
 
-%frame_indices = 1:settings.num_frames;
-frame_indices = [6, 7, 8, 9, 10];
-%frame_indices = [2, 5, 7, 11, 13];
+if settings.num_frames <= 5
+    frame_indices = 1:settings.num_frames;
+else
+    %frame_indices = [8, 9, 10, 12, 14];
+    frame_indices = [2, 5, 7, 11, 13];
+end
 for i = 1:length(frame_indices)
     frame_index = frame_indices(i);
     

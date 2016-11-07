@@ -5,7 +5,7 @@ global video_writer;
 
 %% Parameters
 settings.num_samples = 10;
-B = 3 ;
+B = 3;
 T = 3;
 settings.measurement_noise_std = 0.07;
 settings.beta_bias = [0; 0; 0];
@@ -25,8 +25,8 @@ theta_semicertain = [0, pi/60, pi/60];
 theta_uncertain = [0, 0, 0];
 tact = 3;
 %thetas_true = [repmat(theta_certain_1, 1, 1); repmat(theta_certain_1, 1, 1); repmat(theta_certain_2, 1, 1)];
-thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
-%thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
+%thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
+thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
 % thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 150, 1)];
 
 settings.num_frames = size(thetas_true, 1);
@@ -40,8 +40,9 @@ end
 
 %% Algorithm
 settings.quadratic_one = false;
-settings.quadratic_two = true;
+settings.quadratic_two = false;
 settings.kalman_like = false;
+settings.kalman_two = true;
 settings.batch = false;
 settings.independent = false;
 
@@ -51,7 +52,7 @@ settings.batch_size = 2;
 settings.num_iters = 20;
 
 settings.batch_independent = false;
-settings.batch_online = false;
+settings.batch_online = true;
 settings.batch_online_robust = false;
 settings.batch_online_robust_tau = 1;
 settings.quadratic_two_maximization = false;
@@ -64,7 +65,7 @@ settings.model_data_energy = false;
 settings.silhouette_energy = false;
 
 settings.w1 = 1;
-settings.w2 = 1;
+settings.w2 = 5;
 settings.w4 = 1;
 
 %% Display
@@ -101,7 +102,7 @@ for N = 1:settings.num_frames
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
     end
     
-    %% Laplace approximation
+    %% Quadratic-two
     if (settings.quadratic_two && N >= 3)
         X = X_init((B + T) * (N - 2) + 1:(B + T) * N);
         
@@ -113,17 +114,17 @@ for N = 1:settings.num_frames
         a = h(1:B, 1:B); b = h(1:B, B + T + 1:B + T + B); c = h(B + T + 1:B + T + B, 1:B); d = h(B + T + 1:B + T + B, B + T + 1:B + T + B);
         
         if (settings.quadratic_two_marginalization)
-            H(B + T + 1:B + T + B, B + T + 1:B + T + B) = d - c * inv(a) * b; 
+            H(B + T + 1:B + T + B, B + T + 1:B + T + B) = d - c * inv(a) * b;
         end
         if (settings.quadratic_two_maximization)
             H(B + T + 1:B + T + B, B + T + 1:B + T + B) = d;
         end
-            
+        
         H(1:B + T, 1:B + T) = diag(history.h_batch(N - 1, (B + T) * (settings.batch_size - 1) + 1:(B + T) * settings.batch_size));
     end
     
     %% Kalman-like
-    if (settings.kalman_like)
+    if (settings.kalman_like || (settings.kalman_two && N == 1))
         X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
         if (N == 1)
             x0 = [];
@@ -137,6 +138,19 @@ for N = 1:settings.num_frames
         J1 = J(1:end - B, 1:B);
         JtJ = JtJ + (J1'* J1);
         H = [JtJ, zeros(B, B); zeros(B, B), zeros(B, B)];
+    end
+    
+    %% Kalman-two
+    if (settings.kalman_two && N >= 2)
+        
+        X = X_init((B + T) * (N - 2) + 1:(B + T) * N);
+        x0 = history.x_batch(N - 1, (B + T) + 1:end)';
+        
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_two(X, x0, segments0, joints, frames{N}, JtJ, settings), X, settings.num_iters);
+        
+        J1 = J(1:settings.num_samples * 3, B + T + 1:B + T + B);
+        H = diag([diag(JtJ); zeros(T, 1); diag(JtJ + (J1'* J1)); zeros(T, 1)]);
+        JtJ = JtJ + (J1'* J1);        
     end
     
     %% Separate optimization
@@ -158,8 +172,8 @@ for N = 1:settings.num_frames
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, settings), X, settings.num_iters);
         H = J' * J;
-    end    
-   
+    end
+    
     %% Save new history
     if N <= settings.batch_size
         history.x_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); X];
@@ -171,7 +185,7 @@ for N = 1:settings.num_frames
     end
     
     history = get_last_frame_covariance(H, history, settings, N);
-   
+    
     %% Display
     display_jacobian(X, J, settings, N);
     

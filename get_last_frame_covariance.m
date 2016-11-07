@@ -11,7 +11,7 @@ if settings.display_covariance
     invert_block = false;
     invert_all = true;
     
-    if (settings.quadratic_one)
+    if (settings.quadratic_one || settings.kalman_two)
         invert_block = true;
         invert_all = false;
     end

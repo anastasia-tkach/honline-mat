@@ -11,8 +11,9 @@ load([input_path, sequence_name, '/results_history_uniform']);
 load([input_path, sequence_name, '/results_history_kalman']);
 
 settings.batch = false;
-settings.kalman_like = false;
-settings.quadratic = true;
+settings.kalman_like = true;
+settings.kalman_two = false;
+settings.quadratic = false;
 
 options = optimoptions(@lsqnonlin, 'Algorithm', 'levenberg-marquardt', 'display','off');
 R = @(theta) [cos(theta), -sin(theta); sin(theta), cos(theta)];
@@ -76,6 +77,15 @@ for run_index = 1:settings.num_runs
         F = @(xx)  [...
             inv(sqrtm(sigma0)) * (xx(3:4) - mu1); ...
             inv(sqrtm(sigma1)) * (xx(3:4) - mu1); ...
+            inv(sqrtm(sigma2)) * (xx(3:4) - mu2);
+            ];
+    end
+    
+    %% kalman
+    if settings.kalman_two
+        F = @(xx)  [...
+            inv(sqrtm(sigma0)) * (xx(1:2) - mu1); ...
+            (xx(1:2) - xx(3:4)); ...
             inv(sqrtm(sigma2)) * (xx(3:4) - mu2);
             ];
     end

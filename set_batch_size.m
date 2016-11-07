@@ -16,6 +16,10 @@ if settings.kalman_like == true
     settings.batch_size = 1;
     active_algorithms_count = active_algorithms_count + 1;
 end
+if settings.kalman_two == true
+    settings.batch_size = 2;
+    active_algorithms_count = active_algorithms_count + 1;
+end
 if settings.batch == true
     active_algorithms_count = active_algorithms_count + 1;
 end

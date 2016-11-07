@@ -7,6 +7,7 @@ algorithm_name = '';
 if settings.quadratic_one == true, algorithm_name = 'quadratic-one'; end
 if settings.quadratic_two == true, algorithm_name = 'quadratic-two'; end
 if settings.kalman_like == true, algorithm_name = 'kalman-like'; end
+if settings.kalman_two == true, algorithm_name = 'kalman-two'; end
 if settings.independent == true, algorithm_name = 'independent'; end
 
 if settings.batch == true && settings.batch_online == true, algorithm_name = 'batch-online'; end
