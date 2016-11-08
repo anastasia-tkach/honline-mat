@@ -9,6 +9,7 @@ if settings.quadratic_two == true, algorithm_name = 'quadratic-two'; end
 if settings.kalman_like == true, algorithm_name = 'kalman-like'; end
 if settings.kalman_two == true, algorithm_name = 'kalman-two'; end
 if settings.independent == true, algorithm_name = 'independent'; end
+if settings.batch_simulation == true, algorithm_name = 'batch-simulation'; end
 
 if settings.batch == true && settings.batch_online == true, algorithm_name = 'batch-online'; end
 if settings.batch == true && settings.batch_independent == true, algorithm_name = 'batch-independent'; end
@@ -34,7 +35,7 @@ if ~settings.data_model_energy && settings.model_data_energy && ~settings.silhou
 if ~settings.data_model_energy && ~settings.model_data_energy && settings.silhouette_energy, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     s2d', '\color[rgb]{0.25 0.25 0.25}']; end
 
 %% Algorithm parameters
-if settings.batch, title_string = [title_string, '     batch = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.batch_size), '\color[rgb]{0.25 0.25 0.25}']; end
+if settings.batch || settings.batch_simulation, title_string = [title_string, '     batch = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.batch_size), '\color[rgb]{0.25 0.25 0.25}']; end
 if settings.batch && settings.batch_online_robust, title_string = [title_string, '     \tau = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.batch_online_robust_tau), '\color[rgb]{0.25 0.25 0.25}']; end
 
 if settings.model_data_energy || settings.silhouette_energy

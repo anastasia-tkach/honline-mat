@@ -23,6 +23,9 @@ end
 if settings.batch == true
     active_algorithms_count = active_algorithms_count + 1;
 end
+if settings.batch_simulation == true
+    active_algorithms_count = active_algorithms_count + 1;
+end
 if settings.independent == true
     settings.batch_size = 1;
     active_algorithms_count = active_algorithms_count + 1;
@@ -33,6 +36,11 @@ history.h_batch = zeros(settings.num_frames, (B + T) * settings.batch_size);
 
 if settings.display_covariance
     history.covariance = zeros(settings.num_frames, B, B);
+end
+
+if settings.batch_simulation
+    history.hessian_independent = zeros(settings.num_frames, B, B);
+    history.mu_independent = zeros(settings.num_frames, B);
 end
 
 %% Check if there is only one algorithm set to true

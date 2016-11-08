@@ -1,4 +1,4 @@
-
+tic
 %%{
 clear; clc;
 rng default;
@@ -83,3 +83,4 @@ end
 
 %% Probabilistic interpretation
 %simulate_cost_function(settings, results_history, covariance_history);
+toc

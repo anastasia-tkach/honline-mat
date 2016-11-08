@@ -1,4 +1,4 @@
-function [segment_indices, model_points] = compute_correspondences_cpp_wrapper(segments, blocks, data_points)
+function [segment_indices, model_points] = compute_data_correspondences_cpp_wrapper(segments, blocks, data_points)
 
 centers = cell(length(segments), 1);
 for j = 1:length(segments)
@@ -18,12 +18,8 @@ for j = 1:length(data_points)
     DataPoints(j, :) = data_points{j}';
 end
 
-[segment_indices, ModelPoints] = compute_data_correspondences_matlab(Centers, Blocks, DataPoints);
-
-%% compute model-data corresp
-%[data_points] = sample_2D(data_segments, settings.num_samples);
-
-%[segment_indices, ModelPoints] = compute_correspondences_cpp([size(Centers, 1), size(Blocks, 1), size(DataPoints, 1)], Centers, Blocks, DataPoints);
+%[segment_indices, ModelPoints] = compute_data_correspondences_matlab(Centers, Blocks, DataPoints);
+[segment_indices, ModelPoints] = compute_data_correspondences_cpp([size(Centers, 1), size(Blocks, 1), size(DataPoints, 1)], Centers, Blocks, DataPoints);
 
 model_points = cell(length(data_points), 1);
 for j = 1:length(data_points)
