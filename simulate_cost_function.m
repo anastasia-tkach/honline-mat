@@ -1,17 +1,18 @@
 %sequence_name = 'stability';
-sequence_name = 'parameterwise';
+%sequence_name = 'parameterwise';
+sequence_name = 'stability-one';
 
 input_path = 'saved-variables/probabilistic-interpretation/';
 
 load([input_path, sequence_name, '/results_history']);
 load([input_path, sequence_name, '/covariance_history']);
-load([input_path, sequence_name, '/results_history_batch']);
-load([input_path, sequence_name, '/results_history_batch_independent']);
-load([input_path, sequence_name, '/results_history_uniform']);
-load([input_path, sequence_name, '/results_history_kalman']);
+% load([input_path, sequence_name, '/results_history_batch']);
+% load([input_path, sequence_name, '/results_history_batch_independent']);
+% load([input_path, sequence_name, '/results_history_uniform']);
+% load([input_path, sequence_name, '/results_history_kalman']);
 
-settings.batch = false;
-settings.kalman_like = true;
+settings.batch = true;
+settings.kalman_like = false;
 settings.kalman_two = false;
 settings.quadratic = false;
 
@@ -20,7 +21,7 @@ R = @(theta) [cos(theta), -sin(theta); sin(theta), cos(theta)];
 chisquare_val = 2.4477;
 Q = ones(1, 2); W4 = (eye(2, 2) -  1/2 * (Q' * Q));
 n = 2;
-w0 = 0;
+w0 = 1;
 w1 = 1;
 w2 = 1;
 w3 = 1;
@@ -35,7 +36,7 @@ figure; hold on; axis equal;
 X0 = squeeze(results_history(:, zero_frame_index, 1:2));
 X1 = zeros(num_runs, n);
 X2 = zeros(num_runs, n);
-X_test = squeeze(results_history_batch(:, second_frame_index, 1:2));
+%X_test = squeeze(results_history_batch(:, second_frame_index, 1:2));
 %X_test = squeeze(results_history_batch_independent(:, second_frame_index, 1:2));
 %X_test = squeeze(results_history_uniform(:, second_frame_index, 1:2));
 %X_test = squeeze(results_history_kalman(:, second_frame_index, 1:2));
@@ -133,12 +134,12 @@ end
 X0(invalid_indices, :) = [];
 X1(invalid_indices, :) = [];
 X2(invalid_indices, :) = [];
-X_test(invalid_indices, :) = [];
+%X_test(invalid_indices, :) = [];
 
 %% data points
 %scatter(X0(:, 1), X0(:, 2), 20, [206, 173, 209]/255, 'o', 'filled');
-%scatter(X1(:, 1), X1(:, 2), 20, [1.0 0.45 0.3], 'o', 'filled');
-scatter(X2(:, 1), X2(:, 2), 20, [34, 177, 76]/255, 'o', 'filled');
+scatter(X1(:, 1), X1(:, 2), 20, [1.0 0.45 0.3], 'o', 'filled');
+%scatter(X2(:, 1), X2(:, 2), 20, [34, 177, 76]/255, 'o', 'filled');
 
 %% plot X_test
 %scatter(X_test(:, 1), X_test(:, 2), 20, 'r', 'o', 'filled');

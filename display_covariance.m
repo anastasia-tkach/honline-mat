@@ -1,8 +1,6 @@
 function [] = display_covariance(settings, results_history, covariance_history, frame_certainty)
 
 chisquare_val = 2.4477;
-mean_h = zeros(2, 2);
-mean_mu = zeros(2, 1);
 uncertain_background_color = [1; 0.98; 0.95];
 certain_background_color = [0.96; 1; 0.93];
 
@@ -31,9 +29,12 @@ for i = 1:length(frame_indices)
         color = uncertain_background_color;
     end
     set(gca,'color', color);
+    
+    mean_h = zeros(2, 2);
+    mean_mu = zeros(2, 1);
     for run_index = 1:settings.num_runs
         mu = squeeze(results_history(run_index, frame_index, 1:2));
-        sigma = squeeze(covariance_history(run_index, frame_index, 1:2, 1:2));
+        sigma = 0.5 * squeeze(covariance_history(run_index, frame_index, 1:2, 1:2));
         h = inv(sigma);
         [ellipse_points, ok] = get_covarince_elipse(sigma, chisquare_val);
         if ok
@@ -46,7 +47,7 @@ for i = 1:length(frame_indices)
     scatter(results_history(:, frame_index, 1), results_history(:, frame_index, 2), 20, [1.0 0.45 0.3], 'o', 'filled');
     mean_h = mean_h / settings.num_runs;
     mean_mu = mean_mu / settings.num_runs;
-    mean_sigma = inv(h);
+    mean_sigma = inv(mean_h);
     [ellipse_points] = get_covarince_elipse(mean_sigma, chisquare_val);
     plot(ellipse_points(:,1) + mean_mu(1), ellipse_points(:,2) + mean_mu(2), '-', 'lineWidth', 2, 'color', [136, 187, 119]/255);
     

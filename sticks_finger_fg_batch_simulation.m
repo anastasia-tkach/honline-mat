@@ -1,4 +1,4 @@
-function [F, J] = sticks_finger_fg_batch_simulation(X, x0, segments0, joints, frames, N, settings, history)
+function [F, J] = sticks_finger_fg_batch_simulation(X, x0, x_, segments0, joints, frames, N, settings, history)
 
 B = 3; T = 3;
 L = min(N, settings.batch_size);
@@ -15,6 +15,11 @@ for i = 1:L
     H = squeeze(history.hessian_independent(frame_i, :, :));
 
     mu = squeeze(history.mu_independent(frame_i, :))';
+    %if (i < L)
+    %  mu = x_(1:B);
+    %else
+    %  mu = squeeze(history.mu_independent(frame_i, :))';
+    %end
     F1(B * (i - 1) + 1: B * i, 1) = sqrtm(H) * (beta_i - mu);
     J1(B * (i - 1) + 1: B * i, (B + T) * (i - 1) + 1:(B + T) * i) = [sqrtm(H), zeros(B, T)];
 end

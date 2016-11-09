@@ -1,4 +1,4 @@
-function [F, J, H] = sticks_finger_fg_data(x, segments0, joints, data_points, settings)
+function [F, J, H] = sticks_finger_fg_data(x, segments0, joints, data_points, settings, jacobian_type)
 
 %disp(x);
 global video_writer
@@ -134,7 +134,7 @@ if settings.display_iterations
 end
 
 %% Compute Jacobians
-[F, J, H] = jacobian_shape_pose_cpp_wrapper(beta, theta, segments, joints, model_points, data_points, segment_indices, 'cpp');
+[F, J, H] = jacobian_shape_pose_cpp_wrapper(beta, theta, segments, joints, model_points, data_points, segment_indices, jacobian_type);
 
 %% Put weights
 if settings.data_model_energy && (settings.model_data_energy || settings.silhouette_energy)

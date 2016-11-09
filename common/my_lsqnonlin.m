@@ -39,6 +39,5 @@ for iter = 1:num_iters + 1
     X = X + delta;
 end
 
-disp(F');
 %figure; plot(1:num_iters, E_history, 'lineWidth', 2);
 

@@ -24,10 +24,10 @@ theta_certain_12 = [0, pi/3, pi/3];
 theta_semicertain = [0, pi/60, pi/60];
 theta_uncertain = [0, 0, 0];
 tact = 3;
-%thetas_true = [repmat(theta_certain_1, 1, 1); repmat(theta_certain_1, 1, 1); repmat(theta_certain_2, 1, 1)];
+%thetas_true = [repmat(theta_certain_12, 1, 1); repmat(theta_uncertain, 3, 1)];
 %thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
-thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
-%thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 150, 1)];
+%thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
+thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 1000, 1)];
 
 settings.num_frames = size(thetas_true, 1);
 
@@ -66,11 +66,11 @@ settings.model_data_energy = false;
 settings.silhouette_energy = false;
 
 settings.w1 = 1;
-settings.w2 = 10;
+settings.w2 = 1;
 settings.w4 = 1;
 
 %% Display
-settings.display_covariance = false;
+settings.display_covariance = true;
 settings.display_converged = false;
 settings.display_iterations = false;
 settings.display_jacobian = false;
@@ -157,8 +157,14 @@ for N = 1:settings.num_frames
     %% Separate optimization
     if (settings.independent)
         X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings), X, settings.num_iters);
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'cpp'), X, settings.num_iters);
+        
+        % get hessian
+        %[F, J, H] = sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'numerical');
+        %H = hessian_for_scalar_objective(F, J, H);
+        
         H = J' * J;
+   
     end
     
     %% Batch
@@ -179,7 +185,7 @@ for N = 1:settings.num_frames
     if (settings.batch_simulation)
         % independent data jacobian
         X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings), X, settings.num_iters);
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'cpp'), X, settings.num_iters);
         H = J' * J;
         history.hessian_independent(N, :, :) = H(1:B, 1:B);
         history.mu_independent(N, :) = X(1:B);
@@ -190,11 +196,28 @@ for N = 1:settings.num_frames
             x0 = [];
         else
             X = X_init((B + T) * (N - settings.batch_size) + 1:(B + T) * N);
-            x0 = history.x_batch(N - 1, 1:B + T)';
+            x0 = history.x_batch(N - 1, 1:B + T)';           
         end
         
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch_simulation(X, x0, segments0, joints, frames, N, settings, history), X, settings.num_iters);
+        x_ = []; if (N > 1), x_ = history.x_batch(N - 1, end - B - T + 1:end)'; end
+        
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch_simulation(X, x0, x_, segments0, joints, frames, N, settings, history), X, settings.num_iters);
         H = J' * J;
+        
+        %{
+        if (N <= settings.batch_size)
+           for M = 1:N
+               history.hessian_independent(M, :, :) = H((B + T) * (M - 1) + 1:(B + T) * (M - 1) + B, (B + T) * (M - 1) + 1:(B + T) * (M - 1) + B);
+               history.mu_independent(M, :) = X((B + T) * (M - 1) + 1:(B + T) * (M - 1) + B);
+           end
+        else
+           for M = 1:settings.batch_size
+               history.hessian_independent(N - settings.batch_size + M, :, :) = H((B + T) * (M - 1) + 1:(B + T) * (M - 1) + B, (B + T) * (M - 1) + 1:(B + T) * (M - 1) + B);
+               history.mu_independent(N - settings.batch_size + M, :) = X((B + T) * (M - 1) + 1:(B + T) * (M - 1) + B);
+           end
+        end
+        %}
+        
     end
     
     
@@ -203,8 +226,7 @@ for N = 1:settings.num_frames
         history.x_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); X];
         history.h_batch(N, :) = [zeros((B + T) * (settings.batch_size - N), 1); diag(H)];
     else
-        indices = 1:(B + T) *  settings.batch_size;
-        history.x_batch(N, :) = X(indices);
+        history.x_batch(N, :) = X;
         history.h_batch(N, :) = diag(H);
     end
     
