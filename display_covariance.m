@@ -13,7 +13,27 @@ if settings.num_frames <= 5
 else
     %frame_indices = [8, 9, 10, 12, 14];
     frame_indices = [2, 5, 7, 11, 13];
+    %frame_indices = [1, 2, 3, 4, 5];
+    %frame_indices = [30, 31, 33, 35, 84];
+    %frame_indices = [5, 6, 8, 10, 84];
 end
+
+%% Find an outlier (look at the last frame)
+data = squeeze(results_history(:, frame_indices(1), 1:2));
+mean_data = mean(data);
+data = data - repmat(mean_data, size(data, 1), 1);
+sigma_data = cov(data);
+distances = zeros(size(data, 1), 1);
+for i = 1:size(data, 1)
+    d = data(i, :)';
+    distances(i) = sqrt(d' * inv(sigma_data) * d);
+end
+outlier_indices = find(distances > chisquare_val);
+%outlier_indices = find(distances < 1.5);
+%outlier_indices = find((distances > 2.3) .* (distances < chisquare_val) );
+%outlier_indices = outlier_indices(randi([1, length(outlier_indices)], 1, 1));
+
+%% Display all data points
 for i = 1:length(frame_indices)
     frame_index = frame_indices(i);
     
@@ -32,10 +52,14 @@ for i = 1:length(frame_indices)
     
     mean_h = zeros(2, 2);
     mean_mu = zeros(2, 1);
-    for run_index = 1:settings.num_runs
+    run_indices = 1:settings.num_runs;
+    
+    %% draw inliers covariance elipces
+    for run_index = run_indices
         mu = squeeze(results_history(run_index, frame_index, 1:2));
         sigma = 0.5 * squeeze(covariance_history(run_index, frame_index, 1:2, 1:2));
         h = inv(sigma);
+        
         [ellipse_points, ok] = get_covarince_elipse(sigma, chisquare_val);
         if ok
             plot(ellipse_points(:,1) + mu(1), ellipse_points(:,2) + mu(2), '-', 'lineWidth', 2, 'color',  [228, 244, 223]/255);
@@ -44,9 +68,22 @@ for i = 1:length(frame_indices)
         mean_h = mean_h + h;
         mean_mu = mean_mu + mu;
     end
-    scatter(results_history(:, frame_index, 1), results_history(:, frame_index, 2), 20, [1.0 0.45 0.3], 'o', 'filled');
-    mean_h = mean_h / settings.num_runs;
-    mean_mu = mean_mu / settings.num_runs;
+    
+    %% draw outliner covariance elipces
+    for outlier_index = outlier_indices'
+        mu = squeeze(results_history(outlier_index, frame_index, 1:2));
+        sigma = 0.5 * squeeze(covariance_history(outlier_index, frame_index, 1:2, 1:2));       
+        [ellipse_points, ok] = get_covarince_elipse(sigma, chisquare_val);
+        if ok
+            plot(ellipse_points(:,1) + mu(1), ellipse_points(:,2) + mu(2), '-', 'lineWidth', 2, 'color',  [0.8, 0.8, 0.8]);
+        end
+    end
+    
+    %% plot data points
+    scatter(results_history(run_indices, frame_index, 1), results_history(run_indices, frame_index, 2), 20, [1.0 0.45 0.3], 'o', 'filled');
+    scatter(results_history(outlier_indices, frame_index, 1), results_history(outlier_indices, frame_index, 2), 20, [0.5, 0.5, 0.5], 'o', 'filled');
+    mean_h = mean_h / length(run_indices);
+    mean_mu = mean_mu / length(run_indices);
     mean_sigma = inv(mean_h);
     [ellipse_points] = get_covarince_elipse(mean_sigma, chisquare_val);
     plot(ellipse_points(:,1) + mean_mu(1), ellipse_points(:,2) + mean_mu(2), '-', 'lineWidth', 2, 'color', [136, 187, 119]/255);

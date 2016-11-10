@@ -14,7 +14,6 @@ settings.theta_noise_std = 0.15;
 blocks = {[1, 2], [2, 3], [3, 4]};
 beta_true = [3; 3; 3];
 theta_init = [0; 0; 0];
-
 [segments0, joints] = segments_and_joints_2D();
 
 %% Scrip
@@ -26,8 +25,10 @@ theta_uncertain = [0, 0, 0];
 tact = 3;
 %thetas_true = [repmat(theta_certain_12, 1, 1); repmat(theta_uncertain, 3, 1)];
 %thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
-%thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
-thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 1000, 1)];
+thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
+
+%thetas_true = [repmat(theta_uncertain, 5, 1); repmat(theta_certain_1, 2, 1); repmat(theta_certain_2, 2, 1);  repmat(theta_uncertain, 75, 1)];
+%thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 
 settings.num_frames = size(thetas_true, 1);
 
@@ -41,9 +42,9 @@ end
 %% Algorithm
 settings.quadratic_one = false;
 settings.quadratic_two = false;
-settings.kalman_like = false;
+settings.kalman_like = true;
 settings.kalman_two = false;
-settings.batch = true;
+settings.batch = false;
 settings.batch_simulation = false;
 settings.independent = false;
 
@@ -64,6 +65,7 @@ settings.constant_sum_shape_prior = false;
 settings.data_model_energy = true;
 settings.model_data_energy = false;
 settings.silhouette_energy = false;
+settings.ground_truth_hessians = false;
 
 settings.w1 = 1;
 settings.w2 = 1;
@@ -136,7 +138,12 @@ for N = 1:settings.num_frames
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_like(X, x0, segments0, joints, frames{N}, JtJ, N, settings), X, settings.num_iters);
         
-        J1 = J(1:end - B, 1:B);
+        if (settings.ground_truth_hessians)        
+            J1 = sqrtm(theta_to_hessian_map(num2str(thetas_true(N, :))));
+        else        
+            J1 = J(1:end - B, 1:B);  
+        end
+        
         JtJ = JtJ + (J1'* J1);
         H = [JtJ, zeros(B, B); zeros(B, B), zeros(B, B)];
     end
@@ -149,7 +156,12 @@ for N = 1:settings.num_frames
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_two(X, x0, segments0, joints, frames{N}, JtJ, settings), X, settings.num_iters);
         
-        J1 = J(1:settings.num_samples * 3, B + T + 1:B + T + B);
+        if (settings.ground_truth_hessians)        
+            J1 = sqrtm(theta_to_hessian_map(num2str(thetas_true(N, :))));
+        else        
+            J1 = J(1:settings.num_samples * 3, B + T + 1:B + T + B);  
+        end
+        
         H = diag([diag(JtJ); zeros(T, 1); diag(JtJ + (J1'* J1)); zeros(T, 1)]);
         JtJ = JtJ + (J1'* J1);
     end

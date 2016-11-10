@@ -4,6 +4,9 @@ clear; clc;
 rng default;
 num_runs = 100;
 Histories = cell(num_runs, 1);
+
+load('saved-variables\true-hessians\theta_to_hessian_map.mat');
+
 for run_index = 1:num_runs
     disp(run_index);
     main_single_run;
@@ -68,10 +71,10 @@ for beta_index = beta_indices
     end
     
     %% Display empirical variance
-    %display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
+    display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
     
     %% Display history
-    display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
+    %display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
     
 end
 
@@ -81,6 +84,23 @@ if settings.display_covariance
     display_covariance(settings, results_history, covariance_history, frame_certainty);
 end
 
-%% Probabilistic interpretation
-%simulate_cost_function(settings, results_history, covariance_history);
-toc
+%% Compute mean hessians
+%{
+theta_to_hessian_map = containers.Map;
+for i = 1:settings.num_frames
+    mean_hessian = zeros(B, B);
+    for run_index = 1:settings.num_runs
+        sigma = squeeze(covariance_history(run_index, i, :, :));
+      
+        mean_hessian = mean_hessian + inv(sigma);
+    end 
+    key = num2str(thetas_true(i, :));
+    mean_hessian = mean_hessian / settings.num_runs;
+    if (~theta_to_hessian_map.isKey(mean_hessian))
+        theta_to_hessian_map(key) = mean_hessian;
+    else
+        disp(theta_to_hessian_map(key));
+    end
+end
+%}
+
