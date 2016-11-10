@@ -27,7 +27,7 @@ tact = 3;
 %thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
 thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
 
-%thetas_true = [repmat(theta_uncertain, 5, 1); repmat(theta_certain_1, 2, 1); repmat(theta_certain_2, 2, 1);  repmat(theta_uncertain, 75, 1)];
+%thetas_true = [repmat(theta_uncertain, 70, 1); repmat(theta_certain_1, 2, 1); repmat(theta_certain_2, 2, 1);  repmat(theta_uncertain, 10, 1)];
 %thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 
 settings.num_frames = size(thetas_true, 1);
@@ -42,13 +42,13 @@ end
 %% Algorithm
 settings.quadratic_one = false;
 settings.quadratic_two = false;
-settings.kalman_like = true;
+settings.kalman_like = false;
 settings.kalman_two = false;
 settings.batch = false;
-settings.batch_simulation = false;
+settings.batch_simulation = true;
 settings.independent = false;
 
-settings.batch_size = 2;
+settings.batch_size = 1;
 
 %% Parameters
 settings.num_iters = 20;
@@ -59,13 +59,14 @@ settings.batch_online_robust = false;
 settings.batch_online_robust_tau = 1;
 settings.quadratic_two_maximization = false;
 settings.quadratic_two_marginalization = true;
+settings.batch_simulation_kalman = true;
 
 settings.uniform_shape_prior = false;
 settings.constant_sum_shape_prior = false;
 settings.data_model_energy = true;
 settings.model_data_energy = false;
 settings.silhouette_energy = false;
-settings.ground_truth_hessians = false;
+settings.ground_truth_hessians = true;
 
 settings.w1 = 1;
 settings.w2 = 1;
@@ -195,14 +196,21 @@ for N = 1:settings.num_frames
     
     %% Batch simulation
     if (settings.batch_simulation)
-        % independent data jacobian
+        
+        %% independent data jacobian
         X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'cpp'), X, settings.num_iters);
-        H = J' * J;
-        history.hessian_independent(N, :, :) = H(1:B, 1:B);
-        history.mu_independent(N, :) = X(1:B);
         
-        % batch simulation jacobian
+        history.mu_independent(N, :) = X(1:B);          
+        
+        if (settings.ground_truth_hessians)        
+            history.hessian_independent(N, :, :) = theta_to_hessian_map(num2str(thetas_true(N, :)));
+        else        
+            H = J' * J;
+            history.hessian_independent(N, :, :) = H(1:B, 1:B);
+        end
+        
+        %% batch simulation jacobian
         if N <= settings.batch_size
             X = X_init(1:(B + T) * N);
             x0 = [];
@@ -214,22 +222,7 @@ for N = 1:settings.num_frames
         x_ = []; if (N > 1), x_ = history.x_batch(N - 1, end - B - T + 1:end)'; end
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch_simulation(X, x0, x_, segments0, joints, frames, N, settings, history), X, settings.num_iters);
-        H = J' * J;
-        
-        %{
-        if (N <= settings.batch_size)
-           for M = 1:N
-               history.hessian_independent(M, :, :) = H((B + T) * (M - 1) + 1:(B + T) * (M - 1) + B, (B + T) * (M - 1) + 1:(B + T) * (M - 1) + B);
-               history.mu_independent(M, :) = X((B + T) * (M - 1) + 1:(B + T) * (M - 1) + B);
-           end
-        else
-           for M = 1:settings.batch_size
-               history.hessian_independent(N - settings.batch_size + M, :, :) = H((B + T) * (M - 1) + 1:(B + T) * (M - 1) + B, (B + T) * (M - 1) + 1:(B + T) * (M - 1) + B);
-               history.mu_independent(N - settings.batch_size + M, :) = X((B + T) * (M - 1) + 1:(B + T) * (M - 1) + B);
-           end
-        end
-        %}
-        
+        H = J' * J;       
     end
     
     

@@ -41,13 +41,25 @@ end
 
 %% Online batch
 
-if settings.batch_online && N > settings.batch_size
+if settings.batch_online && N > settings.batch_size && ~settings.batch_simulation_kalman
     beta_1 = X(1:B);
     beta_0 = x0(1:B);
-    %F2(B * (L - 1) + 1: B * L) = 1/sqrt(settings.w2) * (beta_0 - beta_1);
-    %J2(B * (L - 1) + 1: B * L, 1:B) = - 1/sqrt(settings.w2) * eye(B, B);
     F2(B * (L - 1) + 1: B * L) = (beta_0 - beta_1);
     J2(B * (L - 1) + 1: B * L, 1:B) = - eye(B, B);
+end
+
+%% Online batch kalman
+if settings.batch_simulation_kalman && N > settings.batch_size
+    
+    K = zeros(B, B);
+    for i = 1:N - settings.batch_size
+        K = K + squeeze(history.hessian_independent(i, :, :));
+    end
+    
+    beta_1 = X(1:B);
+    beta_0 = x0(1:B);
+    F2(B * (L - 1) + 1: B * L) = sqrtm(K) * (beta_0 - beta_1);
+    J2(B * (L - 1) + 1: B * L, 1:B) = - sqrtm(K);
 end
 
 

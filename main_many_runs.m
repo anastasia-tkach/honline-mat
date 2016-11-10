@@ -71,10 +71,10 @@ for beta_index = beta_indices
     end
     
     %% Display empirical variance
-    display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
+    %display_empirical_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
     
     %% Display history
-    %display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
+    display_history_with_variance(means, standard_deviations, importance_means, importance_standard_deviations, beta_true(beta_index), ylimit, settings, settings.num_frames, frame_certainty, 'sticks_finger', beta_indices, beta_index);
     
 end
 
