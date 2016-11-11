@@ -39,7 +39,7 @@ for i = 1:L - 1
     
 end
 
-%% Online batch
+%% Uniform prior
 
 if settings.batch_online && N > settings.batch_size && ~settings.batch_simulation_kalman
     beta_1 = X(1:B);
@@ -48,7 +48,7 @@ if settings.batch_online && N > settings.batch_size && ~settings.batch_simulatio
     J2(B * (L - 1) + 1: B * L, 1:B) = - eye(B, B);
 end
 
-%% Online batch kalman
+%% Kalman prior
 if settings.batch_simulation_kalman && N > settings.batch_size
     
     K = zeros(B, B);

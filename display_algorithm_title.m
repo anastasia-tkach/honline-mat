@@ -15,7 +15,24 @@ if settings.batch == true && settings.batch_online == true, algorithm_name = 'ba
 if settings.batch == true && settings.batch_independent == true, algorithm_name = 'batch-independent'; end
 if settings.batch == true && settings.batch_online_robust == true, algorithm_name = 'batch-online-robust'; end
 
+if settings.batch_simulation == true && settings.batch_simulation_kalman == true, algorithm_name = 'batch-simulation-kalman'; end
+if settings.balman == true, algorithm_name = 'balman'; end
+
 title_string = ['\color[rgb]{0.9 0.4 0.3}', algorithm_name, '\color[rgb]{0.25 0.25 0.25}'];
+
+%% Balman
+
+if settings.balman == true        
+    if settings.balman_solve_all, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     solve-all', '\color[rgb]{0.25 0.25 0.25}']; end
+    if settings.balman_solve_last, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     solve-last', '\color[rgb]{0.25 0.25 0.25}']; end    
+    if settings.balman_simulate, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     simulate', '\color[rgb]{0.25 0.25 0.25}']; end  
+    
+    if settings.balman_data_hessian, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     data-hessian', '\color[rgb]{0.25 0.25 0.25}']; end
+    if settings.balman_true_hessian, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     true-hessian', '\color[rgb]{0.25 0.25 0.25}']; end
+    
+    if settings.balman_uniform_prior, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     uniform-prior', '\color[rgb]{0.25 0.25 0.25}']; end
+    if settings.balman_kalman_prior, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     kalman-prior', '\color[rgb]{0.25 0.25 0.25}'];  end
+end
 
 %% Quadratic type
 if settings.quadratic_two

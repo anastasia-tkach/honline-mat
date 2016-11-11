@@ -14,7 +14,6 @@ else
     %frame_indices = [8, 9, 10, 12, 14];
     frame_indices = [2, 5, 7, 11, 13];
     %frame_indices = [70, 71, 73, 75, 84];
-    %frame_indices = [5, 6, 8, 10, 84];
     %frame_indices = 1:5;
 end
 

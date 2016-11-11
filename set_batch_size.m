@@ -30,6 +30,9 @@ if settings.independent == true
     settings.batch_size = 1;
     active_algorithms_count = active_algorithms_count + 1;
 end
+if settings.balman == true
+	active_algorithms_count = active_algorithms_count + 1;
+end
 
 history.x_batch = zeros(settings.num_frames, (B + T) * settings.batch_size);
 history.h_batch = zeros(settings.num_frames, (B + T) * settings.batch_size);
@@ -38,7 +41,7 @@ if settings.display_covariance
     history.covariance = zeros(settings.num_frames, B, B);
 end
 
-if settings.batch_simulation
+if settings.balman_kalman_prior || settings.batch_simulation_kalman
     history.hessian_independent = zeros(settings.num_frames, B, B);
     history.mu_independent = zeros(settings.num_frames, B);
 end

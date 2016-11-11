@@ -40,15 +40,27 @@ for i = 1:settings.num_frames
 end
 
 %% Algorithm
+settings.independent = false;
 settings.quadratic_one = false;
 settings.quadratic_two = false;
 settings.kalman_like = false;
 settings.kalman_two = false;
-settings.batch = false;
-settings.batch_simulation = true;
-settings.independent = false;
 
-settings.batch_size = 1;
+settings.batch = false;
+settings.batch_simulation = false;
+settings.ground_truth_hessians = true;
+settings.batch_simulation_kalman = true;
+
+settings.balman = true;
+settings.balman_data_hessian = false;
+settings.balman_true_hessian = true;
+settings.balman_solve_all = false;
+settings.balman_solve_last = true;
+settings.balman_simulate = false;
+settings.balman_uniform_prior = true;
+settings.balman_kalman_prior = false;
+
+settings.batch_size = 2;
 
 %% Parameters
 settings.num_iters = 20;
@@ -59,21 +71,20 @@ settings.batch_online_robust = false;
 settings.batch_online_robust_tau = 1;
 settings.quadratic_two_maximization = false;
 settings.quadratic_two_marginalization = true;
-settings.batch_simulation_kalman = true;
 
 settings.uniform_shape_prior = false;
 settings.constant_sum_shape_prior = false;
 settings.data_model_energy = true;
 settings.model_data_energy = false;
 settings.silhouette_energy = false;
-settings.ground_truth_hessians = true;
+
 
 settings.w1 = 1;
 settings.w2 = 1;
 settings.w4 = 1;
 
 %% Display
-settings.display_covariance = true;
+settings.display_covariance = false;
 settings.display_converged = false;
 settings.display_iterations = false;
 settings.display_jacobian = false;
@@ -139,10 +150,10 @@ for N = 1:settings.num_frames
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_like(X, x0, segments0, joints, frames{N}, JtJ, N, settings), X, settings.num_iters);
         
-        if (settings.ground_truth_hessians)        
+        if (settings.ground_truth_hessians)
             J1 = sqrtm(theta_to_hessian_map(num2str(thetas_true(N, :))));
-        else        
-            J1 = J(1:end - B, 1:B);  
+        else
+            J1 = J(1:end - B, 1:B);
         end
         
         JtJ = JtJ + (J1'* J1);
@@ -157,10 +168,10 @@ for N = 1:settings.num_frames
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_kalman_two(X, x0, segments0, joints, frames{N}, JtJ, settings), X, settings.num_iters);
         
-        if (settings.ground_truth_hessians)        
+        if (settings.ground_truth_hessians)
             J1 = sqrtm(theta_to_hessian_map(num2str(thetas_true(N, :))));
-        else        
-            J1 = J(1:settings.num_samples * 3, B + T + 1:B + T + B);  
+        else
+            J1 = J(1:settings.num_samples * 3, B + T + 1:B + T + B);
         end
         
         H = diag([diag(JtJ); zeros(T, 1); diag(JtJ + (J1'* J1)); zeros(T, 1)]);
@@ -168,16 +179,23 @@ for N = 1:settings.num_frames
     end
     
     %% Separate optimization
-    if (settings.independent)
+    if settings.independent || settings.balman_kalman_prior || settings.batch_simulation_kalman
         X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'cpp'), X, settings.num_iters);
         
-        % get hessian
         %[F, J, H] = sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'numerical');
         %H = hessian_for_scalar_objective(F, J, H);
-        
         H = J' * J;
-   
+        
+        if settings.balman_kalman_prior || settings.batch_simulation_kalman
+            history.mu_independent(N, :) = X(1:B);
+            if (settings.ground_truth_hessians || settings.balman_true_hessian)
+                history.hessian_independent(N, :, :) = theta_to_hessian_map(num2str(thetas_true(N, :)));
+            else
+                history.hessian_independent(N, :, :) = H(1:B, 1:B);
+            end
+        end
+        
     end
     
     %% Batch
@@ -190,39 +208,40 @@ for N = 1:settings.num_frames
             x0 = history.x_batch(N - 1, 1:B + T)';
         end
         
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, settings), X, settings.num_iters);
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, settings, history), X, settings.num_iters);
         H = J' * J;
     end
     
     %% Batch simulation
     if (settings.batch_simulation)
-        
-        %% independent data jacobian
-        X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
-        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'cpp'), X, settings.num_iters);
-        
-        history.mu_independent(N, :) = X(1:B);          
-        
-        if (settings.ground_truth_hessians)        
-            history.hessian_independent(N, :, :) = theta_to_hessian_map(num2str(thetas_true(N, :)));
-        else        
-            H = J' * J;
-            history.hessian_independent(N, :, :) = H(1:B, 1:B);
-        end
-        
-        %% batch simulation jacobian
         if N <= settings.batch_size
             X = X_init(1:(B + T) * N);
             x0 = [];
         else
             X = X_init((B + T) * (N - settings.batch_size) + 1:(B + T) * N);
-            x0 = history.x_batch(N - 1, 1:B + T)';           
+            x0 = history.x_batch(N - 1, 1:B + T)';
         end
         
         x_ = []; if (N > 1), x_ = history.x_batch(N - 1, end - B - T + 1:end)'; end
         
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_batch_simulation(X, x0, x_, segments0, joints, frames, N, settings, history), X, settings.num_iters);
-        H = J' * J;       
+        H = J' * J;
+    end
+    
+    %% Balman
+    if (settings.balman)
+        if N <= settings.batch_size
+            X = X_init(1:(B + T) * N);
+            x0 = [];
+        else
+            X = X_init((B + T) * (N - settings.batch_size) + 1:(B + T) * N);
+            x0 = history.x_batch(N - 1, 1:B + T)';
+        end
+        
+        x_ = []; if (N > 1), x_ = history.x_batch(N - 1, end - B - T + 1:end)'; end
+        
+        [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_balman(X, x0, x_, segments0, joints, frames, N, settings, history), X, settings.num_iters);
+        H = J' * J;
     end
     
     

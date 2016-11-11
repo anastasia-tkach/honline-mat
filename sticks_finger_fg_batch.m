@@ -1,4 +1,4 @@
-function [F, J] = sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, settings)
+function [F, J] = sticks_finger_fg_batch(X, x0, segments0, joints, frames, N, settings, history)
 
 B = 3; T = 3;
 L = min(N, settings.batch_size);
@@ -32,13 +32,26 @@ for i = 1:L - 1
     
 end
 
-%% Online batch
-
-if settings.batch_online && N > settings.batch_size
+%% Uniform prior
+if settings.batch_online && N > settings.batch_size  && ~settings.batch_simulation_kalman
     beta_1 = X(1:B);
     beta_0 = x0(1:B);
     F2(B * (L - 1) + 1: B * L) = beta_0 - beta_1;
     J2(B * (L - 1) + 1: B * L, 1:B) = - eye(B, B);
+end
+
+%% Kalman prior
+if settings.batch_simulation_kalman && N > settings.batch_size
+    
+    K = zeros(B, B);
+    for i = 1:N - settings.batch_size
+        K = K + squeeze(history.hessian_independent(i, :, :));
+    end
+    
+    beta_1 = X(1:B);
+    beta_0 = x0(1:B);
+    F2(B * (L - 1) + 1: B * L) = sqrtm(K) * (beta_0 - beta_1);
+    J2(B * (L - 1) + 1: B * L, 1:B) = - sqrtm(K);
 end
 
 %% Robust online batch
