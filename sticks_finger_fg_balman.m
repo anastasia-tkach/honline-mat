@@ -1,4 +1,4 @@
-function [F, J] = sticks_finger_fg_balman(X, x0, x_, segments0, joints, frames, N, settings, history)
+function [F, J, J1] = sticks_finger_fg_balman(X, x0, x_, segments0, joints, frames, N, settings, history)
 
 B = 3; T = 3;
 L = min(N, settings.batch_size);
@@ -40,7 +40,6 @@ if settings.balman_solve_last
     F1(B * (L - 1) + 1:B * (L - 1) + num_points, 1) = f1;
     J1(B * (L - 1) + 1:B * (L - 1) + num_points, (B + T) * (L - 1) + 1:(B + T) * L) = j1;
 end
-
 
 %% Closeness term
 F2 = zeros(B * (L - 1), 1);

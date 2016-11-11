@@ -38,10 +38,10 @@ if settings.display_covariance
     history.covariance = zeros(settings.num_frames, B, B);
 end
 
-if settings.balman_kalman_prior || ~settings.balman_solve_all
+%if settings.balman_kalman_prior || ~settings.balman_solve_all
     history.hessian_independent = zeros(settings.num_frames, B, B);
     history.mu_independent = zeros(settings.num_frames, B);
-end
+%end
 
 %% Check if there is only one algorithm set to true
 

@@ -15,12 +15,19 @@ dF2_dx1 = [- sqrt(settings.w2) * eye(B, B), zeros(B, T)];
 dF2_dx2 = [ sqrt(settings.w2) * eye(B, B), zeros(B, T)];
 dF2 = [dF2_dx1, dF2_dx2];
 
-%% Quadratic approx   
-Q = sqrtm(H) * (xx(1:B) - x0(1:B));
-dQ_dx1 = [sqrtm(H), zeros(B, T)];
-dQ_dx2 = zeros(B, M);
-dQ = [dQ_dx1, dQ_dx2];
 
-F = [F1; F2; Q];
-J = [dF1; dF2; dQ];
+F = [F1; F2];
+J = [dF1; dF2];
+
+%% Quadratic approx   
+if ~isempty(x0)
+    Q = sqrtm(H) * (xx(1:B) - x0(1:B));
+    dQ_dx1 = [sqrtm(H), zeros(B, T)];
+    dQ_dx2 = zeros(B, M);
+    dQ = [dQ_dx1, dQ_dx2];
+
+    F = [F1; F2; Q];
+    J = [dF1; dF2; dQ];
+end
+
 

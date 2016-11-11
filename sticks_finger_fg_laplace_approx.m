@@ -5,7 +5,7 @@ M = B + T;
 num_data = length(data_points);
 
 %% Data term
-[F1, dF1_dx2, ddF1_dx2_dx2] = sticks_finger_fg_data(xx(M + 1:2 * M), segments0, joints, data_points, settings);
+[F1, dF1_dx2, ddF1_dx2_dx2] = sticks_finger_fg_data(xx(M + 1:2 * M), segments0, joints, data_points, settings, 'cpp');
 
 % jacobian
 dF1 = zeros(num_data, 2 * M);

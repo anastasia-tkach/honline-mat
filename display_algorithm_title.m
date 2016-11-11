@@ -30,6 +30,9 @@ if settings.balman == true
     
     if settings.balman_uniform_prior, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     uniform-prior', '\color[rgb]{0.25 0.25 0.25}']; end
     if settings.balman_kalman_prior, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     kalman-prior', '\color[rgb]{0.25 0.25 0.25}'];  end
+    
+    if settings.balman_keep_previous, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     keep-previous', '\color[rgb]{0.25 0.25 0.25}']; end
+    if settings.balman_update_previous, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     update-previous', '\color[rgb]{0.25 0.25 0.25}'];  end
 end
 
 %% Quadratic type
@@ -43,14 +46,16 @@ if settings.quadratic_two
 end
 
 %% Data energy
+%{
 if settings.data_model_energy && ~settings.model_data_energy && ~settings.silhouette_energy, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     d2m', '\color[rgb]{0.25 0.25 0.25}']; end
 if settings.data_model_energy && settings.model_data_energy && ~settings.silhouette_energy, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     d2m & m2d', '\color[rgb]{0.25 0.25 0.25}']; end
 if settings.data_model_energy && ~settings.model_data_energy && settings.silhouette_energy, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     d2m & s2m', '\color[rgb]{0.25 0.25 0.25}']; end
 if ~settings.data_model_energy && settings.model_data_energy && ~settings.silhouette_energy, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     m2d', '\color[rgb]{0.25 0.25 0.25}']; end
 if ~settings.data_model_energy && ~settings.model_data_energy && settings.silhouette_energy, title_string = [title_string, '\color[rgb]{0 0.6 0.3}', '     s2d', '\color[rgb]{0.25 0.25 0.25}']; end
+%}
 
 %% Algorithm parameters
-if settings.batch, title_string = [title_string, '     batch = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.batch_size), '\color[rgb]{0.25 0.25 0.25}']; end
+if settings.batch || settings.balman, title_string = [title_string, '     batch = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.batch_size), '\color[rgb]{0.25 0.25 0.25}']; end
 if settings.batch && settings.batch_online_robust, title_string = [title_string, '     \tau = ', '\color[rgb]{0 0.6 0.3}', num2str(settings.batch_online_robust_tau), '\color[rgb]{0.25 0.25 0.25}']; end
 
 if settings.model_data_energy || settings.silhouette_energy
