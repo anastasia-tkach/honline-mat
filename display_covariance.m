@@ -12,7 +12,8 @@ if settings.num_frames <= 5
     frame_indices = 1:settings.num_frames;
 else
     %frame_indices = [8, 9, 10, 12, 14];
-    frame_indices = [2, 5, 7, 11, 13];
+    %frame_indices = [2, 5, 7, 11, 13];
+    frame_indices = [1, 2, 3, 7, 12];
     %frame_indices = [70, 71, 73, 75, 84];
     %frame_indices = 1:5;
 end
@@ -32,6 +33,7 @@ outlier_indices = find(distances > chisquare_val);
 %outlier_indices = find((distances > 2.3) .* (distances < chisquare_val) );
 %outlier_indices = outlier_indices(randi([1, length(outlier_indices)], 1, 1));
 
+outlier_indices = [97];
 %% Display all data points
 for i = 1:length(frame_indices)
     frame_index = frame_indices(i);

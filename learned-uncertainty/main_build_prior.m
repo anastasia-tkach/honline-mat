@@ -31,8 +31,11 @@ for t2 = 1:num_steps
             
             beta_true = beta_init + beta_noise_std * randn(B, 1);
             theta_true = theta_init + theta_noise_std * randn(T, 1);
-            [beta, theta] = fit_one_pose(beta_init, beta_true, theta_init, theta_true, measurement_noise_std, false);
+            %[beta, theta] = fit_one_pose(beta_init, beta_true, theta_init, theta_true, measurement_noise_std, false);
             
+             X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
+            [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'cpp'), X, settings.num_iters);
+       
             betas(t2, t3, i, :) = beta - beta_true;
             thetas(t2, t3, i, :) = theta - theta_true;
         end

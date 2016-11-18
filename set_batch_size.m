@@ -37,6 +37,9 @@ history.h_batch = zeros(settings.num_frames, (B + T) * settings.batch_size);
 if settings.display_covariance
     history.covariance = zeros(settings.num_frames, B, B);
 end
+if settings.display_full_covariance
+     history.full_covariance = zeros(settings.num_frames, B + T, B + T);
+end
 
 %if settings.balman_kalman_prior || ~settings.balman_solve_all
     history.hessian_independent = zeros(settings.num_frames, B, B);

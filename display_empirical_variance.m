@@ -38,7 +38,7 @@ for j = 1:N
         rectangle('Position',[j, ylimit(1), 1, ylimit(2) - ylimit(1)],'FaceColor',[0.96; 1; 0.93],'EdgeColor','none')
     end
 end
-plot(1:N + 1, x_true * ones(N + 1, 1), 'lineWidth', 2, 'color', [1, 0.5, 0.4], 'lineStyle', '-.');
+plot(1:N + 1, x_true(1) * ones(N + 1, 1), 'lineWidth', 2, 'color', [1, 0.5, 0.4], 'lineStyle', '-.');
 
 max_value = max(importance_means(:) + importance_standard_deviations(:));
 

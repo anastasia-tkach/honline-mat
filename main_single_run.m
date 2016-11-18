@@ -12,14 +12,14 @@ settings.beta_bias = [0; 0; 0];
 settings.beta_noise_std = 0.5;
 settings.theta_noise_std = 0.15;
 blocks = {[1, 2], [2, 3], [3, 4]};
-beta_true = [3; 3; 3];
+betas_true = [3; 3; 3];
 theta_init = [0; 0; 0];
 [segments0, joints] = segments_and_joints_2D();
 
 %% Scrip
-theta_certain_1 = [0, pi/3, 0];
-theta_certain_2 = [0, 0, pi/3];
-theta_certain_12 = [0, pi/3, pi/3];
+theta_certain_1 = [0, 1.0367, 0];%[0, pi/3, 0];
+theta_certain_2 = [0, 0, 1.0367];%[0, 0, pi/3];
+theta_certain_12 =[0, 1.0367, 1.0367]; %[0, pi/3, pi/3];
 theta_semicertain = [0, pi/60, pi/60];
 theta_uncertain = [0, 0, 0];
 tact = 3;
@@ -32,10 +32,10 @@ thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1
 
 settings.num_frames = size(thetas_true, 1);
 
-[frames, beta_init, thetas_init] = get_random_data_from_theta(beta_true, thetas_true, settings);
+[frames, betas_true, betas_init, thetas_init] = get_random_data_from_theta(betas_true, thetas_true, settings);
 X_init = zeros((B + T) * settings.num_frames, 1);
 for i = 1:settings.num_frames
-    X_init((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = beta_init;
+    X_init((B + T) * (i - 1) + 1:(B + T) * (i - 1) + B) = betas_init{i};
     X_init((B + T) * (i - 1) + B + 1:(B + T) * i) = thetas_init{i};
 end
 
@@ -62,7 +62,7 @@ settings.balman_kalman_prior = true;
 settings.balman_keep_previous = true;
 settings.balman_update_previous = false;
 
-settings.batch_size = 2;
+settings.batch_size = 1;
 
 %% Parameters
 settings.num_iters = 20;
@@ -85,13 +85,14 @@ settings.w2 = 1;
 settings.w4 = 1;
 
 %% Display
-settings.display_covariance = false;
+settings.display_full_covariance = true;
+settings.display_covariance = true;
 settings.display_converged = false;
 settings.display_iterations = false;
 settings.display_jacobian = false;
 
 settings.write_video = false;
-if (settings.display_converged || settings.display_iterations),
+if (settings.display_converged || settings.display_iterations)
     figure('units', 'normalized', 'outerposition', [0.25, 0.275, 0.45, 0.7]);
     axis off; axis equal; hold on;
 end
@@ -115,10 +116,12 @@ for N = 1:settings.num_frames
         %H = hessian_for_scalar_objective(F, J, H);
         H = J' * J;
         
+        
         if settings.balman_kalman_prior || ~settings.balman_solve_all
             history.mu_independent(N, :) = X(1:B);
             if (settings.balman_true_hessian)
-                history.hessian_independent(N, :, :) = theta_to_hessian_map(num2str(thetas_true(N, :)));
+                %history.hessian_independent(N, :, :) = theta_to_hessian_map_temp(num2str(thetas_true(N, :)));
+                history.hessian_independent(N, :, :) = lookup_ground_truth_hessian(X(B + 1 : B + T), true_thetas, true_hessians);
             else
                 history.hessian_independent(N, :, :) = H(1:B, 1:B);
             end
@@ -268,14 +271,14 @@ for N = 1:settings.num_frames
     if (settings.display_converged)
         beta = X(end - (B + T) + 1:end - T);
         theta = X(end - T + 1:end);
-        data_points = frames{N};
+        %data_points = frames{N};
         [segments0, joints] = segments_and_joints_2D();
         [segments0] = shape_2D(segments0, beta);
         [segments] = pose_2D(segments0, joints, theta);
         [segment_indices, model_points] = compute_correspondences_2D(segments, blocks, data_points);
         clf; hold on; axis off; axis equal; set(gcf,'color','w');
         display_sticks_finger(segments, data_points, model_points);
-        drawnow; pause(0.05); %waitforbuttonpress
+        drawnow; pause(0.05); waitforbuttonpress
         
         if settings.write_video
             f = getframe();

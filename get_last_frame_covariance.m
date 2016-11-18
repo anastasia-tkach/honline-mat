@@ -43,5 +43,7 @@ if settings.display_covariance
 end
 
 
-
+if settings.display_full_covariance
+    history.full_covariance(N, :, :) = H(end - B - T + 1:end, end - B - T + 1:end);
+end
 
