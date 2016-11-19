@@ -7,7 +7,7 @@ global video_writer;
 settings.num_samples = 10;
 B = 3;
 T = 3;
-settings.measurement_noise_std = 0.07;
+settings.measurement_noise_std = 0.03;
 settings.beta_bias = [0; 0; 0];
 settings.beta_noise_std = 0.5;
 settings.theta_noise_std = 0.15;
@@ -121,6 +121,8 @@ for N = 1:settings.num_frames
             history.mu_independent(N, :) = X(1:B);
             if (settings.balman_true_hessian)
                 %history.hessian_independent(N, :, :) = theta_to_hessian_map_temp(num2str(thetas_true(N, :)));
+                
+                %history.hessian_independent(N, :, :) = lookup_ground_truth_hessian(thetas_true(N, :), true_thetas, true_hessians);
                 history.hessian_independent(N, :, :) = lookup_ground_truth_hessian(X(B + 1 : B + T), true_thetas, true_hessians);
             else
                 history.hessian_independent(N, :, :) = H(1:B, 1:B);
@@ -271,7 +273,7 @@ for N = 1:settings.num_frames
     if (settings.display_converged)
         beta = X(end - (B + T) + 1:end - T);
         theta = X(end - T + 1:end);
-        %data_points = frames{N};
+        data_points = frames{N};
         [segments0, joints] = segments_and_joints_2D();
         [segments0] = shape_2D(segments0, beta);
         [segments] = pose_2D(segments0, joints, theta);

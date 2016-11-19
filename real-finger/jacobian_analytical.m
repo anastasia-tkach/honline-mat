@@ -1,4 +1,4 @@
-function [F, J, H] = jacobian_shape_pose_analytical(beta, theta, sizes, DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
+function [F, J, H] = jacobian_analytical(beta, theta, sizes, DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
 
 num_points = sizes(1);
 num_joints = sizes(2);
@@ -17,8 +17,10 @@ if num_points == 0, return; end
 
 %% Build the Jacobian matrix
 for k = 1:num_points
-    d = [DataPoints(k, :)'; 0];
-    m = [ModelPoints(k, :)'; 0];
+    d = DataPoints(k, :)';
+    m = ModelPoints(k, :)';
+    %disp(d');
+    %disp(m'); 
     
     if isempty(m) || norm(m - d) == 0, continue; end
     n = (d - m) / norm(m - d);
@@ -54,8 +56,7 @@ for k = 1:num_points
         v = v - p;        
         j(:, num_segments - 1 + joint_id) = cross(v, m - p)';
     end
-    
-    %%{
+
     %% compute hessian - function
     bt = [beta; theta];
     if segment_kinematic_chain(2) == -1    
@@ -152,27 +153,14 @@ for k = 1:num_points
     
     ddm = @(bt) shiftdim([- n(1:2)' * dm_ddb1(bt); - n(1:2)' * dm_ddb2(bt); - n(1:2)' * dm_ddb3(bt); - n(1:2)' * dm_ddt1(bt); - n(1:2)' * dm_ddt2(bt); - n(1:2)' * dm_ddt3(bt)], -1);
     H(k, :, :) = ddm(bt); 
-    %%}
-    %% Sstore to matrices 
-    %j = j./10;
-    %j(:, 1:3) = 0;
-    
+
+    %% Store to matrices    
     F(k) = n' * (d - m);   
     J(k, :) = - n' * j;
-    
-    %for x = 1:3
-    %    myline(m, m - j(:, x), 'r');
-    %end
-    %for x = 4:6
-    %    myline(m, m - j(:, x), 'k');
-    %end
-    
-    
-    %%{
+
     F_ = @(bt) [F_(bt); n(1:2)' * (d(1:2) - m_(bt))];
     J_ = @(bt) [J_(bt); - n(1:2)' * dm_(bt)];
     H_ = @(bt) [H_(bt); ddm(bt)];
-    %%}
 end 
 
 %% Verify gradient for single point
@@ -185,8 +173,10 @@ dm_analytical
 
 % Verify gradient and hessian for all points
 %%{
-V = my_gradient(F_, bt);
-figure; imagesc(J_(bt) - V); axis equal; colorbar;
+
+%V = my_gradient(F_, bt);
+%figure; imagesc(J_(bt) - V); axis equal; colorbar;
+
 % VV = my_gradient(J_, bt);
 % H__ = H_(bt);
 % for i = 1:6

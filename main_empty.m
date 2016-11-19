@@ -15,6 +15,10 @@ end
 
 close all;
 clear; clc;
+settings.data_model_energy = true;
+settings.model_data_energy = false;
+settings.silhouette_energy = false;
+settings.display_iterations = false;
 rng(11);
 
 %% Parameters
@@ -59,8 +63,8 @@ for n = 1:N
     end
    
     %[F, G, H] = sticks_finger_eg_single([beta; theta], segments0, joints, data_points, 'numerical');
-    [F_, G_, H_] = sticks_finger_fg_data([beta; theta], segments0, joints, data_points, 'analytical');
-    [F_cpp, G_cpp, H_cpp] = sticks_finger_fg_data([beta; theta], segments0, joints, data_points, 'cpp');
+    [F_, G_, H_] = sticks_finger_fg_data([beta; theta], segments0, joints, data_points, settings, 'analytical');
+    [F_cpp, G_cpp, H_cpp] = sticks_finger_fg_data([beta; theta], segments0, joints, data_points, settings, 'cpp');
     
     imagesc(G_ - G_cpp); colorbar;
     disp([G_, G_cpp]);
