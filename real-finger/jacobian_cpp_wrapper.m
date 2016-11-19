@@ -34,6 +34,7 @@ JointsAxis = zeros(num_joints, 3);
 for j = 1:num_joints
     JointsAxis(j, :) = joints{j}.axis';
 end
-[F, J] = jacobian_analytical(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, SegmentIndices', SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);
 
-%[F, J] = jacobian_cpp(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, SegmentIndices', SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);
+%[F, J] = jacobian_analytical(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, SegmentIndices', SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);
+
+[F, J] = jacobian_cpp(beta, theta, [num_points, num_joints, num_segments, max_kinematic_chain], DataPoints, ModelPoints, SegmentIndices', SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis);

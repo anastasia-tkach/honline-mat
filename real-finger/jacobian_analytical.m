@@ -147,16 +147,14 @@ for k = 1:num_points
     dm_ddt2 = @ (bt) [dm_db1_dt2(bt), dm_db2_dt2(bt), dm_db3_dt2(bt), dm_dt2_dt1(bt), dm_dt2_dt2(bt), dm_dt2_dt3(bt)];
     dm_ddt3 = @ (bt) [dm_db1_dt3(bt), dm_db2_dt3(bt), dm_db3_dt3(bt), dm_dt3_dt1(bt), dm_dt3_dt2(bt), dm_dt3_dt3(bt)];   
     
-    %nn = my_gradient(dm_dt3, bt);
-    %aa = dm_ddt3(bt);
-    %disp([nn(1, :); aa(1, :); nn(2, :); aa(2, :)]);
-    
     ddm = @(bt) shiftdim([- n(1:2)' * dm_ddb1(bt); - n(1:2)' * dm_ddb2(bt); - n(1:2)' * dm_ddb3(bt); - n(1:2)' * dm_ddt1(bt); - n(1:2)' * dm_ddt2(bt); - n(1:2)' * dm_ddt3(bt)], -1);
     H(k, :, :) = ddm(bt); 
 
     %% Store to matrices    
     F(k) = n' * (d - m);   
     J(k, :) = - n' * j;
+    
+    %J(k, [1:3, 4, 6]) = 0;
 
     F_ = @(bt) [F_(bt); n(1:2)' * (d(1:2) - m_(bt))];
     J_ = @(bt) [J_(bt); - n(1:2)' * dm_(bt)];
@@ -173,9 +171,9 @@ dm_analytical
 
 % Verify gradient and hessian for all points
 %%{
-
-%V = my_gradient(F_, bt);
-%figure; imagesc(J_(bt) - V); axis equal; colorbar;
+% figure;
+% V = my_gradient(F_, bt);
+% figure; imagesc(J_(bt) - V); axis equal; colorbar;
 
 % VV = my_gradient(J_, bt);
 % H__ = H_(bt);
