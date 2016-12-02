@@ -1,4 +1,4 @@
-function [model_points, segment_indices] = compute_correspondences_3D(segments, radii_array, blocks, data_points)
+function [model_points, axis_projections, segment_indices] = compute_correspondences_3D(segments, radii_array, blocks, data_points)
 
 centers = cell(length(segments), 1);
 radii = cell(length(segments), 1);

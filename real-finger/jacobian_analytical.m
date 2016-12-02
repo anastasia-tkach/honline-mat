@@ -1,4 +1,7 @@
-function [F, J, H] = jacobian_analytical(beta, theta, sizes, DataPoints, ModelPoints, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
+function [F, J, H] = jacobian_analytical(beta, theta, radii, sizes, DataPoints, ModelPoints, AxisProjections, segment_indices, SegmentsKinematicChain, SegmentsGlobal, JointsSegmentId, JointsAxis)
+
+[segments, joints] = segments_and_joints_3D();
+[segments] = shape_3D(segments, beta);
 
 num_points = sizes(1);
 num_joints = sizes(2);
@@ -19,8 +22,9 @@ if num_points == 0, return; end
 for k = 1:num_points
     d = DataPoints(k, :)';
     m = ModelPoints(k, :)';
+    s = AxisProjections(k, :)';
     %disp(d');
-    %disp(m'); 
+    %disp(m');
     
     if isempty(m) || norm(m - d) == 0, continue; end
     n = (d - m) / norm(m - d);
@@ -28,173 +32,79 @@ for k = 1:num_points
     j = zeros(3, num_joints - 1 + num_segments - 1);
     
     segment_kinematic_chain = SegmentsKinematicChain(segment_indices(k), :);
+    kinematic_chain_globals = cell(length(segment_kinematic_chain), 1);
     for l = 1:length(segment_kinematic_chain)
         if segment_kinematic_chain(l) == -1, break; end
-        
         joint_id = segment_kinematic_chain(l);
         segment_id = JointsSegmentId(joint_id);
         u = JointsAxis(joint_id, :)';
         
+        %% extract data
         segment_global = reshape(SegmentsGlobal(segment_id, :), 4, 4);
-        
-        p = segment_global(1:3, 4);
+        t = segment_global(1:3, 4);
         T = segment_global;
-                        
+        
+        %% pose
+        v = T * [u; 1];
+        v = v(1:3) / v(4);
+        v = v - t;
+        j(:, num_segments - 1 + joint_id) = cross(v, s - t)';
+        
         %% shape
         v = T * [0; 1; 0; 1]; v = v(1:3) / v(4);
-        v = v - p;        
+        v = v - t;
         
         c = 1;
         if l == 3 || segment_kinematic_chain(l + 1) == -1
-           c = norm(m - p) / beta(l); 
+            c = norm(s - t) / beta(l);
         end
-
-        j(:, segment_id) = c * v;
         
-        %% pose
-        v = T * [u; 1]; v = v(1:3) / v(4);
-        v = v - p;        
-        j(:, num_segments - 1 + joint_id) = cross(v, m - p)';
+        j(:, segment_id) = c * v;
     end
+    
+    %% "anonynous" function
+    l_last = 0;
+    if segment_kinematic_chain(3) > 0, l_last = 3; end
+    if segment_kinematic_chain(3) == -1, l_last = 2; end
+    if segment_kinematic_chain(2) == -1, l_last = 1; end
+    
+    fraction = norm(s - t) / beta(l_last); % change
+    x = [beta; theta];
+    offset  = m - s;
+    m_ = projection_function(x, d, segment_kinematic_chain, JointsAxis, JointsSegmentId, segments, fraction, offset);
+    df = my_gradient(@(x) projection_function(x, d, segment_kinematic_chain, JointsAxis, JointsSegmentId, segments, fraction, offset), x);
+    
+    %% jacobian convsegment
+    variables = {'c2'};
+    if (l_last == 1), i1 = 1; i2 = 2; end
+    if (l_last == 2), i1 = 2; i2 = 3; end
+    if (l_last == 3), i1 = 3; i2 = 4; end
+    T1 = reshape(SegmentsGlobal(i1, :), 4, 4);
+    T2 = reshape(SegmentsGlobal(i2, :), 4, 4);
+    c1 = T1(1:3, 4);
+    c2 = T2(1:3, 4);
+    r1 = radii(i1);
+    r2 = radii(i2);
+    [m_, dm] = jacobian_convsegment(m, c1, c2, r1, r2, variables);
+    df_ = dm.dc2 * v;
+    %myline(m, m + df_, 'b');
+    %disp(df_./(m - s));
 
-    %% compute hessian - function
-    bt = [beta; theta];
-    if segment_kinematic_chain(2) == -1    
-        k1 = norm(m - SegmentsGlobal(1, 13:15)') / bt(1); 
-        k2 = 0; k3 = 0;
-    end    
-    if segment_kinematic_chain(3) == -1 && segment_kinematic_chain(2) > 0
-        k1 = 1; k3 = 0;
-        k2 = norm(m - SegmentsGlobal(2, 13:15)') / bt(2);        
-    end    
-    if segment_kinematic_chain(3) > 0
-        k1 = 1; k2 = 1;        
-        k3 = norm(m - SegmentsGlobal(3, 13:15)') / bt(3);
-    end
-    m_ = @(bt) [k1 * bt(1) * cos(pi/2 + bt(4)) + k2 * bt(2) * cos(pi/2 + bt(4) + bt(5)) + k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6));...
-        k1 * bt(1) * sin(pi/2 + bt(4)) + k2 * bt(2) * sin(pi/2 + bt(4) + bt(5)) +  k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-    %disp([m_(bt), m(1:2)]);
+    %% two projections    
+    v1 = c1 + r1 * (m - s) / norm(m - s);
+    c3 = c2 + v;
+    z = c1 + (c3 - c1) * r1 / (r1 - r2);
     
-    %% compute hessian - gradients
+    t = intersect_line_line(s, m, v1, z);
     
-    dm_dt1 = @(bt) [- k1 * bt(1) * sin(pi/2 + bt(4)) - k2 * bt(2) * sin(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6)); ...
-        k1 * bt(1) * cos(pi/2 + bt(4)) + k2 * bt(2) * cos(pi/2 + bt(4) + bt(5)) + k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6))];
-    dm_dt2 = @ (bt)  [ - k2 * bt(2) * sin(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6)); ...
-        k2 * bt(2) * cos(pi/2 + bt(4) + bt(5)) + k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6))];
-    dm_dt3 = @ (bt)  [ - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6)); ...
-        k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6))];    
-   
-    dm_db1 = @(bt) [k1 * cos(pi/2 + bt(4)); k1 * sin(pi/2 + bt(4))];
-    dm_db2 = @(bt) [k2 * cos(pi/2 + bt(4) + bt(5)); k2 * sin(pi/2 + bt(4) + bt(5))];
-    dm_db3 = @(bt) [k3 * cos(pi/2 + bt(4) + bt(5) + bt(6)); k3 * sin(pi/2 + bt(4) + bt(5) + bt(6))];   
+    dd = t - m;
+    %disp([df_, dd]);
+    disp(df_./dd);
     
-    dm_ = @(bt) [dm_db1(bt), dm_db2(bt), dm_db3(bt), dm_dt1(bt), dm_dt2(bt), dm_dt3(bt)];
-   
-    %% compute hessian - beta-beta
-    dm_db1_db1 = @(bt) [0; 0]; dm_db1_db2 = @(bt) [0; 0]; dm_db1_db3 = @(bt) [0; 0];
-    dm_db2_db1 = @(bt) [0; 0]; dm_db2_db2 = @(bt) [0; 0]; dm_db2_db3 = @(bt) [0; 0];
-    dm_db3_db1 = @(bt) [0; 0]; dm_db3_db2 = @(bt) [0; 0]; dm_db3_db3 = @(bt) [0; 0];
-    
-    %% compute hessian - beta-theta    
-    dm_db1_dt1 = @(bt) [- k1 * sin(pi/2 + bt(4)); k1 * cos(pi/2 + bt(4))];
-    dm_db1_dt2 = @(bt) [0; 0];
-    dm_db1_dt3 = @(bt) [0; 0];
-    
-    dm_db2_dt1 = @(bt) [- k2 * sin(pi/2 + bt(4) + bt(5)); k2 * cos(pi/2 + bt(4) + bt(5))];
-    dm_db2_dt2 = @(bt) [- k2 * sin(pi/2 + bt(4) + bt(5)); k2 * cos(pi/2 + bt(4) + bt(5))];
-    dm_db2_dt3 = @(bt) [0; 0];    
-    
-    dm_db3_dt1 = @(bt) [- k3 * sin(pi/2 + bt(4) + bt(5) + bt(6)); k3 * cos(pi/2 + bt(4) + bt(5) + bt(6))];
-    dm_db3_dt2 = @(bt) [- k3 * sin(pi/2 + bt(4) + bt(5) + bt(6)); k3 * cos(pi/2 + bt(4) + bt(5) + bt(6))];
-    dm_db3_dt3 = @(bt) [- k3 * sin(pi/2 + bt(4) + bt(5) + bt(6)); k3 * cos(pi/2 + bt(4) + bt(5) + bt(6))];    
-    
-    %% compute hessian - theta-theta
-    
-    % dt1_d..
-    dm_dt1_dt1 = @(bt) [- k1 * bt(1) * cos(pi/2 + bt(4)) - k2 * bt(2) * cos(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-        - k1 * bt(1) * sin(pi/2 + bt(4)) - k2 * bt(2) * sin(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-    
-    dm_dt1_dt2 = @(bt) [- k2 * bt(2) * cos(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-        - k2 * bt(2) * sin(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-    
-    dm_dt1_dt3 = @(bt) [- k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-        - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-    
-     % dt3_d..    
-    dm_dt2_dt1 = @ (bt)  [ - k2 * bt(2) * cos(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-        - k2 * bt(2) * sin(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-    
-    dm_dt2_dt2 = @ (bt)  [ - k2 * bt(2) * cos(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-         - k2 * bt(2) * sin(pi/2 + bt(4) + bt(5)) - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-    
-    dm_dt2_dt3 = @ (bt)  [ - k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-        - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-
-    % dt3_d..
-    dm_dt3_dt1 = @ (bt)  [ - k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-    - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-    
-    dm_dt3_dt2 = @ (bt)  [ - k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-    - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];
-    
-    dm_dt3_dt3 = @ (bt)  [ - k3 * bt(3) * cos(pi/2 + bt(4) + bt(5) + bt(6)); ...
-    - k3 * bt(3) * sin(pi/2 + bt(4) + bt(5) + bt(6))];    
-
-    dm_ddb1 = @ (bt) [dm_db1_db1(bt), dm_db1_db2(bt), dm_db1_db3(bt), dm_db1_dt1(bt), dm_db1_dt2(bt), dm_db1_dt3(bt)];
-    dm_ddb2 = @ (bt) [dm_db2_db1(bt), dm_db2_db2(bt), dm_db2_db3(bt), dm_db2_dt1(bt), dm_db2_dt2(bt), dm_db2_dt3(bt)];
-    dm_ddb3 = @ (bt) [dm_db3_db1(bt), dm_db3_db2(bt), dm_db3_db3(bt), dm_db3_dt1(bt), dm_db3_dt2(bt), dm_db3_dt3(bt)];
-    dm_ddt1 = @ (bt) [dm_db1_dt1(bt), dm_db2_dt1(bt), dm_db3_dt1(bt), dm_dt1_dt1(bt), dm_dt1_dt2(bt), dm_dt1_dt3(bt)];
-    dm_ddt2 = @ (bt) [dm_db1_dt2(bt), dm_db2_dt2(bt), dm_db3_dt2(bt), dm_dt2_dt1(bt), dm_dt2_dt2(bt), dm_dt2_dt3(bt)];
-    dm_ddt3 = @ (bt) [dm_db1_dt3(bt), dm_db2_dt3(bt), dm_db3_dt3(bt), dm_dt3_dt1(bt), dm_dt3_dt2(bt), dm_dt3_dt3(bt)];   
-    
-    ddm = @(bt) shiftdim([- n(1:2)' * dm_ddb1(bt); - n(1:2)' * dm_ddb2(bt); - n(1:2)' * dm_ddb3(bt); - n(1:2)' * dm_ddt1(bt); - n(1:2)' * dm_ddt2(bt); - n(1:2)' * dm_ddt3(bt)], -1);
-    H(k, :, :) = ddm(bt); 
-
-    %% Store to matrices    
-    F(k) = n' * (d - m);   
-    J(k, :) = - n' * j;
-    
-    %J(k, [1:3, 4, 6]) = 0;
-
-    F_ = @(bt) [F_(bt); n(1:2)' * (d(1:2) - m_(bt))];
-    J_ = @(bt) [J_(bt); - n(1:2)' * dm_(bt)];
-    H_ = @(bt) [H_(bt); ddm(bt)];
-end 
-
-%% Verify gradient for single point
-%{
-dm_numerical = my_gradient(m_, bt);
-dm_analytical = dm_(bt);
-dm_numerical
-dm_analytical
-%}
-
-% Verify gradient and hessian for all points
-%%{
-% figure;
-% V = my_gradient(F_, bt);
-% figure; imagesc(J_(bt) - V); axis equal; colorbar;
-
-% VV = my_gradient(J_, bt);
-% H__ = H_(bt);
-% for i = 1:6
-%     figure; imagesc(H__(:, :, i) - VV(:, :, i)); axis equal; colorbar;
-% end
-%%}
-
-%% Compute scalar functions
-%{
-f = @(bt) F_(bt)' * F_(bt);    
-j = @(bt) 2 * F_(bt)' * J_(bt);    
-v = my_gradient(f, bt);
-%disp([v; j(bt)]);
-
-h = @(bt) hessian_for_scalar_objective(F_(bt), J_(bt), H_(bt));
-vv = my_gradient(j, bt);
-%disp([vv; h(bt)]);
-%}
-
-
+    [~, q1, s, ~] = projection_convsegment(m, c1, c2, r1, r2, 1, 2);
+    [~, q2, s, ~] = projection_convsegment(m, c1, c2 + 1e-10 * v, r1, r2, 1, 2);
+    ddd = (q2 - q1)./1e-10;
+end
 
 
 

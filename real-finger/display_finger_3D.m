@@ -5,7 +5,7 @@ segment_colors = {[], [255, 173, 153]/255, [179, 220, 160]/255, [255, 173, 153]/
 %% Display skeleton
 mypoints({segments{1}.global(1:2, 4)}, [255, 173, 153]/255, 35);
 mylines(data_points, model_points, [0.85, 0.85, 0.85]);
-for i = 1:length(segments)
+for i = 1:2%length(segments)
     if segments{i}.parent_id == 0, continue; end
     a = segments{i}.global(1:3, 4);
     b = segments{segments{i}.parent_id}.global(1:3, 4);
@@ -22,7 +22,7 @@ for i = 1:length(segments)
     centers{i} = segments{i}.global(1:3, 4);
     radii{i} = radii_array(i);
 end
-display_result(centers, [], [], blocks, radii, false, 0.5, 'none');
+display_result(centers, [], [], blocks(1), radii, false, 0.5, 'none');
 view([180, -90]); camlight;
 
 %ylim([-2, 13]); xlim([-7, 7]);

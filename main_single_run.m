@@ -7,7 +7,7 @@ global video_writer;
 settings.num_samples = 10;
 B = 3;
 T = 3;
-settings.measurement_noise_std = 0.03;
+settings.measurement_noise_std = 0.07;
 settings.beta_bias = [0; 0; 0];
 settings.beta_noise_std = 0.5;
 settings.theta_noise_std = 0.15;
@@ -25,9 +25,9 @@ theta_uncertain = [0, 0, 0];
 tact = 3;
 %thetas_true = [repmat(theta_certain_12, 1, 1); repmat(theta_uncertain, 3, 1)];
 %thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
-thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
+%thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
 
-%thetas_true = [repmat(theta_uncertain, 70, 1); repmat(theta_certain_1, 2, 1); repmat(theta_certain_2, 2, 1);  repmat(theta_uncertain, 10, 1)];
+thetas_true = [repmat(theta_uncertain, 70, 1); repmat(theta_certain_1, 2, 1); repmat(theta_uncertain, 2, 1); repmat(theta_certain_2, 2, 1);  repmat(theta_uncertain, 70, 1)];
 %thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
 
 settings.num_frames = size(thetas_true, 1);
@@ -49,20 +49,20 @@ settings.batch = false;
 
 settings.balman = true;
 %
-settings.balman_data_hessian = false;
-settings.balman_true_hessian = true;
+settings.balman_data_hessian = true;
+settings.balman_true_hessian = false;
 %
 settings.balman_solve_all = true;
 settings.balman_solve_last = false;
 settings.balman_simulate = false;
 %
-settings.balman_uniform_prior = false;
-settings.balman_kalman_prior = true;
+settings.balman_uniform_prior = true;
+settings.balman_kalman_prior = false;
 %
-settings.balman_keep_previous = true;
-settings.balman_update_previous = false;
+settings.balman_keep_previous = false;
+settings.balman_update_previous = true;
 
-settings.batch_size = 1;
+settings.batch_size = 4;
 
 %% Parameters
 settings.num_iters = 20;

@@ -2,9 +2,9 @@ function [data_points] = sample_3D(segments, radii_array, blocks)
 
 D = 3; 
 settings.fov = 15;
-downscaling_factor = 18;
-settings.H = 468/downscaling_factor;
-settings.W = 648/downscaling_factor;
+downscaling_factor = 80;
+settings.H = round(460/downscaling_factor);
+settings.W = round(640/downscaling_factor);
 settings.D = D;
 settings.sparse_data = false;
 settings.RAND_MAX = 32767;
