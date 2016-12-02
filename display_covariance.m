@@ -15,8 +15,8 @@ else
     %frame_indices = [1, 2, 3, 7, 12];
     %frame_indices = 1:5;
     
-    %frame_indices = [2, 5, 7, 11, 13];
-    frame_indices = [70, 71, 73, 75, 146];
+    frame_indices = [2, 5, 7, 11, 13];
+    %frame_indices = [70, 71, 73, 75, 146];
 end
 
 %% Find an outlier (look at the last frame)

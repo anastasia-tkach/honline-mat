@@ -25,10 +25,11 @@ theta_uncertain = [0, 0, 0];
 tact = 3;
 %thetas_true = [repmat(theta_certain_12, 1, 1); repmat(theta_uncertain, 3, 1)];
 %thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
-%thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
-
-thetas_true = [repmat(theta_uncertain, 70, 1); repmat(theta_certain_1, 2, 1); repmat(theta_uncertain, 2, 1); repmat(theta_certain_2, 2, 1);  repmat(theta_uncertain, 70, 1)];
 %thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
+
+%thetas_true = [repmat(theta_uncertain, 70, 1); repmat(theta_certain_1, 2, 1); repmat(theta_uncertain, 2, 1); repmat(theta_certain_2, 2, 1);  repmat(theta_uncertain, 70, 1)];
+thetas_true = [repmat(theta_uncertain, tact, 1); repmat(theta_certain_1, tact, 1); repmat(theta_uncertain, tact, 1); repmat(theta_certain_2, tact, 1);  repmat(theta_uncertain, tact, 1)];
+
 
 settings.num_frames = size(thetas_true, 1);
 
@@ -52,17 +53,17 @@ settings.balman = true;
 settings.balman_data_hessian = true;
 settings.balman_true_hessian = false;
 %
-settings.balman_solve_all = true;
+settings.balman_solve_all = false;
 settings.balman_solve_last = false;
-settings.balman_simulate = false;
+settings.balman_simulate = true;
 %
-settings.balman_uniform_prior = true;
-settings.balman_kalman_prior = false;
+settings.balman_uniform_prior = false;
+settings.balman_kalman_prior = true;
 %
 settings.balman_keep_previous = false;
 settings.balman_update_previous = true;
 
-settings.batch_size = 4;
+settings.batch_size = 1;
 
 %% Parameters
 settings.num_iters = 20;
@@ -111,7 +112,7 @@ for N = 1:settings.num_frames
     if settings.independent || settings.balman_kalman_prior || ~settings.balman_solve_all
         X = X_init((B + T) * (N - 1) + 1:(B + T) * N);
         [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'cpp'), X, settings.num_iters);
-        
+        theta_independent = X(end - T + 1:end);
         %[F, J, H] = sticks_finger_fg_data(X, segments0, joints, frames{N}, settings, 'numerical');
         %H = hessian_for_scalar_objective(F, J, H);
         H = J' * J;
@@ -273,6 +274,7 @@ for N = 1:settings.num_frames
     if (settings.display_converged)
         beta = X(end - (B + T) + 1:end - T);
         theta = X(end - T + 1:end);
+        if (settings.balman && settings.balman_simulate) theta = theta_independent; end
         data_points = frames{N};
         [segments0, joints] = segments_and_joints_2D();
         [segments0] = shape_2D(segments0, beta);
@@ -280,7 +282,7 @@ for N = 1:settings.num_frames
         [segment_indices, model_points] = compute_correspondences_2D(segments, blocks, data_points);
         clf; hold on; axis off; axis equal; set(gcf,'color','w');
         display_sticks_finger(segments, data_points, model_points);
-        drawnow; pause(0.05); waitforbuttonpress
+        drawnow; pause(0.05); %waitforbuttonpress
         
         if settings.write_video
             f = getframe();
