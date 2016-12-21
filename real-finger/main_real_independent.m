@@ -1,4 +1,4 @@
-rng default;
+rng(2);%% default;
 clear; clc;
 close all;
 skeleton = false;
@@ -23,7 +23,7 @@ settings.display_jacobian = false;
 
 beta_true = [2; 2; 2];
 theta_true = [pi/5; pi/8; pi/10];
-radii_true = [0.9; 0.8; 0.5; 0.4]/2;
+radii_true = [0.9; 0.85; 0.8; 0.1];
 beta = beta_true + settings.beta_noise_std * randn;
 %beta = beta_true - [0.5; 0.5; 0.5];
 theta = theta_true + settings.theta_noise_std * randn;
