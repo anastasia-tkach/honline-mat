@@ -60,8 +60,8 @@ settings.balman_simulate = true;
 settings.balman_uniform_prior = false;
 settings.balman_kalman_prior = true;
 %
-settings.balman_keep_previous = false;
-settings.balman_update_previous = true;
+settings.balman_keep_previous = true;
+settings.balman_update_previous = false;
 
 settings.batch_size = 1;
 
