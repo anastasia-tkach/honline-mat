@@ -3,20 +3,33 @@ clear;
 
 start_offset = 1;
 half_window_size = 1;
-folder_name = 'sridhar2';
-folder_name = 'tompson_no_wrist';
-folder_name = 'synthetic_02';
-sequence_names = {'teaser_short'};
 
-ylim_time_max = 5.0;
-ylim_time_min = 2.3;
-display_time = false;
-display_statistics = true;
-display_variances = false;
 weighted = false;
 full = false;
 markers = false;
-synthetic = true;
+synthetic = false;
+display_time = false;
+display_statistics = false;
+display_variances = false;
+
+%% Synthetic data
+%folder_name = 'synthetic_anastasia_easy'; sequence_names = {'anastasia_easy'};
+%estimation_types = {'ONLINE_0.050000', 'ONLINE_0.075000', 'ONLINE_0.100000', 'ONLINE_0.125000', 'ONLINE_0.150000', 'ONLINE_0.175000', 'ONLINE_0.200000', 'ONLINE_0.225000', 'ONLINE_0.250000', 'ONLINE_0.275000', 'ONLINE_0.300000', 'ONLINE_0.325000', 'ONLINE_0.350000', 'ONLINE_0.375000', 'ONLINE_0.400000'};
+%synthetic = true;
+
+%% Real data - Tompson
+%folder_name = 'tompson_FINAL'; sequence_names = {'tompson'};
+%estimation_types = {'KALMAN_STANDARD_EVALUATION_0.000000', 'KALMAN_EXTENDED_EVALUATION_0.000000', 'ONLINE_CALIBRATION_0.000000', 'BATCH_OFFLINE_EVALUATION_0.000000', 'BATCH_ONLINE_EVALUATION_0.000000', 'TEMPLATE_0.000000'};
+%markers = true;
+
+%% Real data - teaser
+folder_name = 'teaser_final_no_additional'; sequence_names = {'teaser'};
+estimation_types = {'KALMAN_STANDARD_EVALUATION_0.000000', 'KALMAN_EXTENDED_EVALUATION_0.000000', 'ONLINE_CALIBRATION_0.000000', 'BATCH_OFFLINE_EVALUATION_0.000000', 'BATCH_ONLINE_EVALUATION_0.000000', 'TEMPLATE_0.000000'};
+full = true;
+display_statistics = true;
+
+ylim_time_max = 5.0;
+ylim_time_min = 2.3;
 
 if (weighted)
     xlim_max = 3.0;
@@ -35,14 +48,7 @@ if (synthetic)
     xlim_min = 0;
 end
 
-estimation_types = {'KALMAN_DIAGONAL_EVALUATION_0', 'KALMAN_STANDARD_EVALUATION_0', 'KALMAN_EXTENDED_EVALUATION_10', ...
-    'ONLINE_EVALUATION_0', 'ONLINE_CALIBRATION_0', 'BATCH_OFFLINE_EVALUATION_10', 'BATCH_ONLINE_EVALUATION_10', 'ORIGINAL_10'};
 
-%estimation_types = {'KALMAN_STANDARD_EVALUATION_0', 'KALMAN_EXTENDED_EVALUATION_10', 'ORIGINAL_10', 'ONLINE_CALIBRATION_0', 'BATCH_OFFLINE_EVALUATION_10', 'BATCH_ONLINE_EVALUATION_10'};
-
-%estimation_types = {'marker_based_metrics_full_iters_15_time_5_wrist'};
-%estimation_types = {'KALMAN_STANDARD_CALIBRATION_0', 'KALMAN_STANDARD_EVALUATION_0', 'KALMAN_EXTENDED_EVALUATION_10', 'BATCH_OFFLINE_EVALUATION_0', 'BATCH_ONLINE_EVALUATION_0'};
-estimation_types = {'ONLINE_0'};
 
 %% Processing
 listing = dir(['E:\Data\honline-results\', folder_name]);
@@ -80,9 +86,10 @@ end
 experiment_names = sort(experiment_names);
 data_path = ['E:\Data\honline-results\', folder_name, '\'];
 legend_names = cell(length(experiment_names), 1);
-for i = 1:length(experiment_names)
-    legend_names{i} = strrep(experiment_names{i}, '_', ' ');
-end
+for i = 1:length(experiment_names), legend_names{i} = strrep(experiment_names{i}, '_', ' '); end
+legend_type_names = cell(length(estimation_types), 1);
+for i = 1:length(estimation_types), legend_type_names{i} = strrep(estimation_types{i}, '_', ' '); end
+colors = {[0.4940, 0.1840, 0.5560], [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840], [0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290 0.6940 0.1250],  [0.77, 0.77, 0.77]};
 
 %% Compute marker based metrics
 if (markers)   

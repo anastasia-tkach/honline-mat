@@ -1,21 +1,19 @@
 line_width = 1.5;
 display_title = true;
-num_markers = 6;
-
-display_time = true;
+num_markers = 36;
 
 dataset_type = 'tkach';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-data_path = 'E:/Data/sensor-sequences/sridhar/';
-experiment_names = {'marker_based_metrics_nof','marker_based_metrics'};
-% data_path = 'E:\OneDrive\EPFL\Code\honline-mat\honline-figures\htrack_results_on_dexter\';
-% experiment_names = {'errors_all'};
-num_markers = 6;
-xlim_max = 30;
-xlim_min = 0;
-
-subsequence_limits = [1, 425, 940, 1280, 1672, 2113, 2647, 3154];
+% data_path = 'E:/Data/sensor-sequences/sridhar/';
+% experiment_names = {'marker_based_metrics_nof','marker_based_metrics'};
+% % data_path = 'E:\OneDrive\EPFL\Code\honline-mat\honline-figures\htrack_results_on_dexter\';
+% % experiment_names = {'errors_all'};
+% num_markers = 6;
+% xlim_max = 30;
+% xlim_min = 0;
+% 
+% subsequence_limits = [1, 425, 940, 1280, 1672, 2113, 2647, 3154];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -51,36 +49,14 @@ for i = 1:length(experiment_names)
     error = fscanf(fileID, '%f');
     N = length(error)/num_markers;
     error = reshape(error, num_markers, N)';
-    error = error(start_offset:N, :);
-    
-    %error(error > 40) = 40;
-    
-    errors{i} = mean(error, 2);
+    error = error(start_offset:N, :);    
+   
+    %errors{i} = mean(error, 2);
     %errors{i} = max(error, [], 2);
-    %errors{i} = max(error(:, [1:27]), [], 2);
+    errors{i} = max(error(:, [1:27]), [], 2);
     %errors{i} = mean(error(:, [1:27]), 2);
     
-    
-    %{
-    errors{i} = zeros(length(error), 1);
-    remove_indices = [];
-    for j = 1:length(error)
-        current_error_row = error(j, :);
-        current_error_row = current_error_row(current_error_row < 100);
-        if (length(current_error_row) < 1)
-            remove_indices = [remove_indices, j];
-            current_error_row = 0;
-        end
-        current_error_row(current_error_row > 40) = 40;
-        errors{i}(j) = max(current_error_row);
-    end
-    %errors{i}(remove_indices) = [];
-    %errors{i}(errors{i} > 24.5) = [];
-    %errors{i}(errors{i} > 30) = [];
-    %errors{i} = errors{i}(1:2113);
-    %}
 end
-%disp(length(errors{i}))
 
 %% Find limits
 min_error = 0; max_error = 0;
@@ -111,6 +87,7 @@ end
 %% Statistics
 num_bins = 100;
 thresholds = linspace(min_error, min(xlim_max, max_error), num_bins);
+thresholds = linspace(0,30, 200);
 figure('units', 'normalized', 'outerposition', figure_size); hold on;
 
 for i = 1:length(errors)

@@ -2,7 +2,7 @@ tic
 %%{
 clear; clc;
 rng default;
-num_runs = 100;
+num_runs = 1;
 Histories = cell(num_runs, 1);
 
 load('saved-variables\true-hessians\theta_to_hessian_map_temp.mat');
@@ -18,7 +18,7 @@ end
 beta_indices = 1:3;
 %% Compute statistics
 
-for beta_index = beta_indices
+for beta_index = beta_indices 
     means = zeros(settings.num_frames, settings.num_frames);
     standard_deviations = zeros(settings.num_frames, settings.num_frames);
     current_ij_results = zeros(num_runs, 1);
@@ -83,8 +83,10 @@ end
 %% Display covariance 1-2
 %%{
 settings.num_runs = num_runs;
+settings.betas_true = betas_true;
 if settings.display_covariance
-    display_covariance(settings, results_history, covariance_history, frame_certainty);
+    %display_covariance(settings, results_history, covariance_history, frame_certainty);
+    display_covariance_figure3(settings, results_history, covariance_history, frame_certainty);
 end
 %%}
 %% Compute mean hessians

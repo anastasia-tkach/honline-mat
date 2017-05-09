@@ -7,7 +7,6 @@ figure_size = [0.25, 0.25, 0.5, 0.6];
 
 display_title = true;
 
-num_frames = 1318;
 
 legend_names = cell(length(experiment_names), 1);
 for i = 1:length(experiment_names)

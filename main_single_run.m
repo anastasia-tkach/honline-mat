@@ -7,9 +7,9 @@ global video_writer;
 settings.num_samples = 10;
 B = 3;
 T = 3;
-settings.measurement_noise_std = 0.07;
+settings.measurement_noise_std = 0.03; %0.7
 settings.beta_bias = [0; 0; 0];
-settings.beta_noise_std = 0.5;
+settings.beta_noise_std = 0.5; 
 settings.theta_noise_std = 0.15;
 blocks = {[1, 2], [2, 3], [3, 4]};
 betas_true = [3; 3; 3];
@@ -17,12 +17,12 @@ theta_init = [0; 0; 0];
 [segments0, joints] = segments_and_joints_2D();
 
 %% Scrip
-theta_certain_1 = [0, 1.0367, 0];%[0, pi/3, 0];
-theta_certain_2 = [0, 0, 1.0367];%[0, 0, pi/3];
-theta_certain_12 =[0, 1.0367, 1.0367]; %[0, pi/3, pi/3];
-theta_semicertain = [0, pi/60, pi/60];
-theta_uncertain = [0, 0, 0];
-tact = 3;
+theta_certain_1 = [0, -1.0367, 0];%[0, pi/3, 0];
+theta_certain_2 = [0, 0, -1.0367];%[0, 0, pi/3];
+theta_certain_12 =[0, -1.0367, -1.0367]; %[0, pi/3, pi/3];
+theta_semicertain = [0, -pi/60,-pi/60];
+theta_uncertain = [0, -pi/60, -pi/60];
+tact = 1;
 %thetas_true = [repmat(theta_certain_12, 1, 1); repmat(theta_uncertain, 3, 1)];
 %thetas_true = [repmat(theta_certain_1, 7, 1); repmat(theta_certain_2, 7, 1)];
 %thetas_true = [repmat(theta_uncertain, 4, 1); repmat(theta_certain_12, 4, 1); repmat(theta_uncertain, 7, 1)];
@@ -41,21 +41,21 @@ for i = 1:settings.num_frames
 end
 
 %% Algorithm
-settings.independent = false;
+settings.independent = true;
 settings.quadratic_one = false;
 settings.quadratic_two = false;
 settings.kalman_like = false;
 settings.kalman_two = false;
 settings.batch = false;
 
-settings.balman = true;
+settings.balman = false;
 %
 settings.balman_data_hessian = true;
 settings.balman_true_hessian = false;
 %
-settings.balman_solve_all = false;
+settings.balman_solve_all = true;
 settings.balman_solve_last = false;
-settings.balman_simulate = true;
+settings.balman_simulate = false;
 %
 settings.balman_uniform_prior = false;
 settings.balman_kalman_prior = true;
@@ -88,7 +88,7 @@ settings.w4 = 1;
 %% Display
 settings.display_full_covariance = true;
 settings.display_covariance = true;
-settings.display_converged = false;
+settings.display_converged = true;
 settings.display_iterations = false;
 settings.display_jacobian = false;
 

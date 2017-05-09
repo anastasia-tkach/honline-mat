@@ -41,7 +41,7 @@ for N = 1:settings.num_frames
     
     %% Optimize
 
-    [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, data_points, settings, 'analytical'), X, settings.num_iters);    
+    [X, J] = my_lsqnonlin(@(X) sticks_finger_fg_data(X, segments0, joints, data_points, settings, 'cpp'), X, settings.num_iters);    
     
     
     %% Display
