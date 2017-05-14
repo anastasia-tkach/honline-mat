@@ -1,7 +1,6 @@
 colors = {[0.4940, 0.1840, 0.5560], [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840], [0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290 0.6940 0.1250]};
 
-start_offset = 10;
-end_offset = 2000;
+start_offset = 1;
 line_width = 1.5;
 figure_size = [0.25, 0.25, 0.5, 0.6];
 
@@ -32,7 +31,7 @@ for i = 1:length(experiment_names)
     else
         N = length(error)/2;
         error = reshape(error, 2, N)';
-        error = error(start_offset:N - end_offset, :);
+        error = error(start_offset:N, :);
         errors{i} = error(:, 1);
     end
     errors{i} = sliding_window_averaging(errors{i}, half_window_size);
@@ -77,8 +76,8 @@ if (display_time)
 end
 
 %% Statistics
-num_bins = 100;
-thresholds = linspace(max(min_error, 0), min(max_error, 5), num_bins);
+num_bins = 150;
+thresholds = linspace(max(min_error, 0), xlim_max, num_bins);
 statistics = cell(length(experiment_names), 1);
 for i = 1:length(experiment_names)
     statistics{i} = zeros(length(num_bins), 1);
@@ -114,7 +113,7 @@ if (display_statistics)
     end
     legend(legend_names, 'Location','southeast');
     xlim([thresholds(min_index), thresholds(max_index)]);
-    %xlim([xlim_min, xlim_max]); ylim([0, 1]);
+    xlim([xlim_min, xlim_max]); ylim([0, 1]);
     if display_title
         xlabel('error threshold');
         ylabel('% frames with error < threshold');

@@ -20,7 +20,9 @@ betas = thetas_betas(:, num_thetas + 1:end);
 errors = betas - repmat(beta_true, length(betas), 1);
 errors_norm = zeros(size(errors, 1), 1);
 for j = 1:length(errors)
-    errors_norm(j) = norm(errors(j, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 46:74] + 1));
+    %errors_norm(j) = norm(errors(j, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 46:74] + 1));
+    %errors_norm(j) = mean(abs(errors(j, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 19, 22, 25, 28] + 1)));
+    errors_norm(j) = max(abs(errors(j, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 19, 22, 25, 28] + 1)));
 end
 fclose(fileID);
 
@@ -28,27 +30,45 @@ fclose(fileID);
 fileID = fopen('E:\Data\sensor-sequences\synthetic\online_weighted_metrics.txt', 'r');
 data_errors = fscanf(fileID, '%f');
 fclose(fileID);
+period = [ones(80, 1); zeros(15, 1)];
+period = repmat(period, ceil(length(data_errors) / 100));
+period = period(2:end);
+for i = 1:length(data_errors)
+    if period(i) == 0
+        data_errors(i) = data_errors(i + find(period(i + 1:end), 1, 'first'));
+    end
+end
+
 
 %% Plot data metric
-dark_red = [188, 58, 117]/255;
+dark_red = [178, 78, 107]/255;
 light_red = 0.5 * [217, 154, 143]/255 + 0.5 * [238, 198, 199]/255;
 dark_green = [61, 131, 119]/255;
 light_green = [144, 194, 171]/230;
 
 figure_size = [0.25, 0.25, 0.5, 0.6];
 figure_borders = [0.07 0.11 0.90 0.84];
-
-for i = length(errors_norm):length(errors_norm)
-    f = figure('units', 'normalized', 'outerposition', figure_size); hold on;
-    plot((1:i), errors_norm(1:i), 'lineWidth', 2.5, 'color', dark_green);    
-    %plot(1:length(data_errors), data_errors, 'lineWidth', 2);
-    xlabel('frame number');
+f = figure('units', 'normalized', 'outerposition', figure_size); hold on;
+set(gca,'position', figure_borders, 'units','normalized');
+for i = length(errors_norm)
+    disp(i);
+    clf;   
+    yyaxis left
+    plot((1:i), errors_norm(1:i), 'lineWidth', 2.5, 'color', dark_green);
     ylabel('\beta - \beta_{true}');
-    set(gca,'position', figure_borders, 'units','normalized');
-    ylim([0, 42]);
-    xlim([0.999, i]);
-    set(gca,'fontsize', 15, 'fontname', 'Cambria'); box on;
+    %ylim([0, 10]);
+    set(gca, 'ycolor', 0.8 * dark_green);
     
-    print(f,['E:\Data\honline-video\Plots\', num2str(i)],'-dpng');
-    %close;
+    %yyaxis right
+    %plot(1:length(data_errors), data_errors, 'lineWidth', 2.5, 'color', dark_red);
+    %set(gca, 'ycolor', 0.8 * dark_red);
+    %ylabel('E_{data}');
+    %ylim([0, 8]);
+    
+    xlabel('frame number');  xlim([0.999, i]);
+    set(gca,'fontsize', 15, 'fontname', 'Cambria'); box on;
+    box on; set(gca,'linewidth', 2);
+    set(gca, 'xcolor', [0.3, 0.3, 0.3]);
+    %drawnow;
+    %print(f,['E:\Data\honline-video\FRAMES\synthetic\error\', num2str(i)],'-dpng');
 end

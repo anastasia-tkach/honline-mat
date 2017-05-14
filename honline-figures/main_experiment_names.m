@@ -5,7 +5,7 @@ start_offset = 1;
 half_window_size = 1;
 
 weighted = false;
-full = false;
+full = true;
 markers = false;
 synthetic = false;
 display_time = false;
@@ -13,9 +13,9 @@ display_statistics = false;
 display_variances = false;
 
 %% Synthetic data
-%folder_name = 'synthetic_anastasia_easy'; sequence_names = {'anastasia_easy'};
-%estimation_types = {'ONLINE_0.050000', 'ONLINE_0.075000', 'ONLINE_0.100000', 'ONLINE_0.125000', 'ONLINE_0.150000', 'ONLINE_0.175000', 'ONLINE_0.200000', 'ONLINE_0.225000', 'ONLINE_0.250000', 'ONLINE_0.275000', 'ONLINE_0.300000', 'ONLINE_0.325000', 'ONLINE_0.350000', 'ONLINE_0.375000', 'ONLINE_0.400000'};
-%synthetic = true;
+folder_name = 'synthetic_anastasia_easy'; sequence_names = {'anastasia_easy'};
+estimation_types = {'ONLINE_0.050000', 'ONLINE_0.075000', 'ONLINE_0.100000', 'ONLINE_0.125000', 'ONLINE_0.150000', 'ONLINE_0.175000', 'ONLINE_0.200000', 'ONLINE_0.225000', 'ONLINE_0.250000', 'ONLINE_0.275000', 'ONLINE_0.300000', 'ONLINE_0.325000', 'ONLINE_0.350000', 'ONLINE_0.375000', 'ONLINE_0.400000'};
+synthetic = true;
 
 %% Real data - Tompson
 %folder_name = 'tompson_FINAL'; sequence_names = {'tompson'};
@@ -23,9 +23,13 @@ display_variances = false;
 %markers = true;
 
 %% Real data - teaser
-folder_name = 'teaser_final_no_additional'; sequence_names = {'teaser'};
-estimation_types = {'KALMAN_STANDARD_EVALUATION_0.000000', 'KALMAN_EXTENDED_EVALUATION_0.000000', 'ONLINE_CALIBRATION_0.000000', 'BATCH_OFFLINE_EVALUATION_0.000000', 'BATCH_ONLINE_EVALUATION_0.000000', 'TEMPLATE_0.000000'};
-full = true;
+%folder_name = 'teaser_final_30_perturbed_02'; sequence_names = {'teaser'};
+%estimation_types = {'BATCH_ONLINE_1_EVALUATION_0.200000', 'KALMAN_STANDARD_EVALUATION_0.200000', 'KALMAN_EXTENDED_EVALUATION_0.200000', 'ONLINE_CALIBRATION_0.200000', 'TEMPLATE_0.200000', 'TAYLOR', 'SHARP', 'HTRACK'};
+%estimation_types = {'BATCH_ONLINE_1_EVALUATION_0.200000', 'KALMAN_STANDARD_EVALUATION_0.200000', 'KALMAN_EXTENDED_EVALUATION_0.200000', 'ONLINE_CALIBRATION_0.200000', 'TEMPLATE_0.200000', 'ORIGINAL_0.200000'};
+%estimation_types = {'KALMAN_STANDARD_EVALUATION_0.000000', 'KALMAN_EXTENDED_EVALUATION_0.000000', 'ONLINE_CALIBRATION_0.000000', 'BATCH_OFFLINE_EVALUATION_0.000000', 'BATCH_ONLINE_EVALUATION_0.000000', 'TEMPLATE_0.000000'};
+% full = true;
+% weighted = false;
+
 display_statistics = true;
 
 ylim_time_max = 5.0;
@@ -36,8 +40,8 @@ if (weighted)
     xlim_min = 1.0;
 end
 if (full)
-    xlim_max = 3.0;
-    xlim_min = 5.2;
+    xlim_min = 3.0;
+    xlim_max = 8.0;
 end
 if (markers)
     xlim_max = 30;
